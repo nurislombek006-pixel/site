@@ -1,0 +1,116 @@
+$path="$env:TEMP\love_site.html"; @'
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Вопрос ❤️</title>
+<style>
+body{
+    margin:0;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(135deg,#ff9a9e,#fad0c4);
+    font-family:'Segoe UI',sans-serif;
+}
+.card{
+    background:white;
+    padding:40px;
+    border-radius:25px;
+    text-align:center;
+    box-shadow:0 20px 40px rgba(0,0,0,.2);
+}
+h1{
+    color:#ff4d6d;
+    margin-bottom:30px;
+}
+.buttons{
+    display:flex;
+    gap:20px;
+    justify-content:center;
+}
+button{
+    border:none;
+    border-radius:20px;
+    cursor:pointer;
+    transition:all .3s ease;
+    font-size:20px;
+    padding:15px 30px;
+}
+#yes{
+    background:#ff4d6d;
+    color:white;
+    transform:scale(1);
+}
+#no{
+    background:#ddd;
+    color:#333;
+    transform:scale(1);
+}
+.stickers{
+    font-size:40px;
+    margin-bottom:15px;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+    <div class="stickers">🥺💖🌸</div>
+    <h1>Будешь моей девушкой?</h1>
+    <div class="buttons">
+        <button id="yes">Да 💕</button>
+        <button id="no">Нет 🙈</button>
+    </div>
+</div>
+
+<script>
+let noTexts=[
+    "Точно нет? 😢",
+    "Совсем-совсем? 🥺",
+    "Не передумаешь? 💔",
+    "Я буду хорошим 😭",
+    "Последний шанс 😳",
+    "Ну пожа-а-алуйста 😖",
+    "Ты уверена? 😞"
+];
+
+let noCount=0;
+let yesScale=1;
+let noScale=1;
+
+document.getElementById("no").onclick=()=>{
+    if(noCount<noTexts.length){
+        document.getElementById("no").innerText=noTexts[noCount];
+    }
+    noCount++;
+
+    noScale*=0.8;
+    yesScale*=1.3;
+
+    document.getElementById("no").style.transform=`scale(${noScale})`;
+    document.getElementById("yes").style.transform=`scale(${yesScale})`;
+};
+
+document.getElementById("yes").onclick=()=>{
+    document.body.innerHTML=`
+    <div style="
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        align-items:center;
+        height:100vh;
+        background:linear-gradient(135deg,#ff9a9e,#fad0c4);
+        font-family:'Segoe UI',sans-serif;
+        text-align:center;
+    ">
+        <h1 style="color:#ff4d6d;font-size:50px;">Урааа! 💖🥰</h1>
+        <div style="font-size:60px;">🎉💑🌸💞</div>
+    </div>`;
+};
+</script>
+
+</body>
+</html>
+'@ | Set-Content $path -Encoding UTF8; Start-Process $path

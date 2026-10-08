@@ -244,20 +244,43 @@
         img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Не удалось прочитать изображение.'));};img.src=url;
       });
     }
+    async function ensureBackendReady(){
+      if(location.hostname.endsWith('.github.io')){
+        throw new Error('Вы открыли статическую версию GitHub Pages. Для конвертации Word, PDF и PPTX откройте сайт на адресе Render (onrender.com). На GitHub Pages работает только конвертация изображений.');
+      }
+      status('Подключаемся к серверу','Проверяем готовность сервера. На бесплатном Render первый запуск может занять до минуты…');
+      try {
+        const response=await fetch('/api/health',{cache:'no-store',signal:AbortSignal.timeout(70000)});
+        if(!response.ok)throw new Error('HTTP '+response.status);
+        const payload=await response.json();
+        if(payload.ok!==true)throw new Error('Неверный ответ сервера');
+      }catch(error){
+        throw new Error('Не удалось связаться с сервером конвертации. Проверьте адрес сайта (нужен Render, а не GitHub Pages), статус сервиса и попробуйте позже. '+(error.name==='TimeoutError'?'Сервер слишком долго запускался.':''));
+      }
+      status('Загрузка файла','Сервер готов. Начинаем передачу…');
+    }
     function serverConvert(file,target){
       return new Promise((resolve,reject)=>{
-        const req=new XMLHttpRequest();req.open('POST','/api/convert');req.responseType='blob';req.timeout=150000;
-        req.upload.onprogress=event=>{if(event.lengthComputable){const p=Math.round(event.loaded/event.total*100);$('statusDesc').textContent='Загрузка на сервер: '+p+'%';$('progressFill').style.width=p+'%';}};
-        req.upload.onload=()=>{status('Идёт конвертация','Сервер обрабатывает файл. Это может занять некоторое время.');$('progress').classList.add('indeterminate');};
+        const req=new XMLHttpRequest();req.open('POST','/api/convert');req.responseType='blob';req.timeout=180000;
+        let lastProgress=Date.now(),uploaded=false,lastPercentage=0;
+        const finish=()=>clearInterval(uploadWatchdog);
+        const uploadWatchdog=setInterval(()=>{
+          if(!uploaded && Date.now()-lastProgress>60000)req.abort();
+        },5000);
+        req.upload.onprogress=event=>{lastProgress=Date.now();if(event.lengthComputable){const p=Math.min(99,Math.round(event.loaded/event.total*100));lastPercentage=p;$('statusDesc').textContent='Загрузка на сервер: '+p+'%';$('progressFill').style.width=p+'%';}};
+        req.upload.onload=()=>{uploaded=true;status('Идёт конвертация','Файл загружен, сервер обрабатывает его. Для большой презентации может потребоваться несколько минут.');$('progress').classList.add('indeterminate');};
         req.onload=async()=>{
+          finish();
           if(req.status>=200&&req.status<300){resolve(req.response);}else{
-            let msg='Не удалось конвертировать файл.';
-            try{const text=await req.response.text();msg=JSON.parse(text).detail||msg;}catch(e){}
+            let msg='Сервер не смог конвертировать файл (HTTP '+req.status+').';
+            try{const responseText=await req.response.text();const data=JSON.parse(responseText);msg=data.detail||msg;}catch(e){}
+            if(req.status===502||req.status===503||req.status===504)msg+=' Возможно, сервер перезапустился или ему не хватило памяти для этого файла.';
             reject(new Error(msg));
           }
         };
-        req.onerror=()=>reject(new Error('Нет соединения с сервером. Для Word, PDF и видео необходим запущенный backend.'));
-        req.ontimeout=()=>reject(new Error('Время конвертации истекло. Попробуйте файл меньшего размера.'));
+        req.onerror=()=>{finish();reject(new Error('Соединение с сервером оборвалось. Если файл большой, проверьте память и журналы Render.'));};
+        req.onabort=()=>{finish();reject(new Error('Загрузка остановилась на '+lastPercentage+'% более чем на минуту. Проверьте интернет и состояние сервера Render.'));};
+        req.ontimeout=()=>{finish();reject(new Error('Время загрузки или конвертации истекло (3 минуты). Для больших PPTX может потребоваться более мощный сервер.'));};
         const form=new FormData();form.append('file',file,file.name);form.append('target',target);req.send(form);
       });
     }
@@ -270,6 +293,7 @@
       status('Подготавливаем файл',local?'Изображение обрабатывается прямо в вашем браузере.':'Начинаем безопасную загрузку…');
       if(local){$('progress').classList.add('indeterminate');}
       try{
+        if(!local)await ensureBackendReady();
         const blob=local?await imageConvertInBrowser(file,to):await serverConvert(file,to);
         downloadUrl=URL.createObjectURL(blob);
         const targetExt=from==='pdf'&&['png','jpg'].includes(to)?'zip':to;

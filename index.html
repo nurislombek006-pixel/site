@@ -1,114 +1,285 @@
-add<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>Вопрос ❤️</title>
-<style>
-body{
-    margin:0;
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    background:linear-gradient(135deg,#ff9a9e,#fad0c4);
-    font-family:'Segoe UI',sans-serif;
-}
-.card{
-    background:white;
-    padding:40px;
-    border-radius:25px;
-    text-align:center;
-    box-shadow:0 20px 40px rgba(0,0,0,.2);
-}
-h1{
-    color:#ff4d6d;
-    margin-bottom:30px;
-}
-.buttons{
-    display:flex;
-    gap:20px;
-    justify-content:center;
-}
-button{
-    border:none;
-    border-radius:20px;
-    cursor:pointer;
-    transition:all .3s ease;
-    font-size:20px;
-    padding:15px 30px;
-}
-#yes{
-    background:#ff4d6d;
-    color:white;
-    transform:scale(1);
-}
-#no{
-    background:#ddd;
-    color:#333;
-    transform:scale(1);
-}
-.stickers{
-    font-size:40px;
-    margin-bottom:15px;
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#080d1d" />
+  <meta name="description" content="FluxConvert — быстрый конвертер PDF, Word, PowerPoint, Excel, изображений, аудио и видео." />
+  <title>FluxConvert — конвертер файлов</title>
+  <style>
+    :root { color-scheme: dark; --bg:#080d1d; --panel:#10182a; --panel2:#141d31; --line:#26314a; --text:#f6f8ff; --muted:#a1aec4; --sub:#71809b; --accent:#8b7bff; --accent2:#c1b8ff; --teal:#41dfbd; --red:#ff908f; --shadow:0 24px 80px rgba(0,0,0,.34); }
+    * {box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;color:var(--text);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);line-height:1.5;min-width:320px}
+    body:before{content:"";position:absolute;top:-300px;left:50%;transform:translateX(-50%);height:850px;width:min(1100px,100%);background:radial-gradient(ellipse,rgba(100,76,228,.20),transparent 66%);pointer-events:none;z-index:-1}
+    button,select,input{font:inherit}
+    button{cursor:pointer}
+    a{color:inherit;text-decoration:none}
+    button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
+    .shell{max-width:1160px;margin:auto;padding:0 27px}
+    .topbar{border-bottom:1px solid rgba(148,165,206,.12);position:relative;z-index:3}
+    .topinner{display:flex;align-items:center;justify-content:space-between;height:82px;gap:15px}
+    .brand{display:inline-flex;align-items:center;gap:11px;font-size:20px;font-weight:850;letter-spacing:-.8px;white-space:nowrap}
+    .brandmark{height:38px;width:38px;border-radius:12px;background:linear-gradient(140deg,#b7adff,#6554e9);display:grid;place-items:center;color:white;box-shadow:0 5px 21px rgba(112,94,250,.4)}
+    .brandmark svg{width:25px;height:25px}
+    .brand b{color:#a89cff}
+    .navlinks{display:flex;gap:35px;color:var(--muted);font-size:14px;font-weight:580}
+    .navlinks a:hover,.footer a:hover{color:white}
+    .topright{display:flex;align-items:center;gap:8px}
+    .outlinebtn{display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);border-radius:11px;padding:9px 13px;background:#ffffff08;color:var(--text);font-size:13px;font-weight:650;white-space:nowrap}
+    .outlinebtn svg{height:17px;width:17px}
+    .outlinebtn:hover{border-color:#7069aa;background:#ffffff10}
+    .hero{text-align:center;padding:72px 0 44px}
+    .eyebrow{display:inline-flex;gap:9px;align-items:center;padding:6px 13px 6px 8px;border-radius:999px;border:1px solid #373657;background:#332c622c;color:#cac4ff;font-size:12px;font-weight:750;letter-spacing:.22px}
+    .pulse{background:var(--teal);border-radius:50%;height:7px;width:7px;box-shadow:0 0 0 4px #41dfbd1c}
+    h1{font-size:clamp(34px,5.5vw,67px);line-height:1.1;letter-spacing:-3px;margin:23px 0 18px;font-weight:860}
+    .gradient{background:linear-gradient(100deg,#a595ff 2%,#d9d1ff 45%,#68e3d2 94%);background-clip:text;-webkit-background-clip:text;color:transparent}
+    .subtitle{font-size:17px;color:var(--muted);max-width:580px;margin:0 auto;line-height:1.7}
+    .converter{max-width:900px;margin:0 auto;background:linear-gradient(140deg,#171c34,#10192c);border:1px solid #343e63;border-radius:23px;padding:25px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+    .converter:before{content:"";height:130px;left:-100px;right:-100px;top:0;position:absolute;background:radial-gradient(ellipse at 50% 0,rgba(150,125,255,.12),transparent 65%);pointer-events:none}
+    .conv-head{display:flex;align-items:center;justify-content:space-between;position:relative;gap:12px;margin-bottom:20px}
+    .conv-head strong{font-size:15px;font-weight:760}
+    .secure{display:flex;gap:6px;align-items:center;color:#90cfc5;font-size:12px;white-space:nowrap}
+    .secure svg{height:15px;width:15px}
+    .dropzone{position:relative;border:1.5px dashed #576083;transition:.18s all;border-radius:16px;min-height:236px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#0a1125a9;text-align:center;padding:25px;outline-offset:-2px}
+    .dropzone:hover,.dropzone.dragover{border-color:#ab9cff;background:#7d71ed19}
+    .drop-icon{display:grid;place-items:center;margin:0 auto 12px;width:59px;height:59px;border-radius:18px;background:linear-gradient(135deg,#7d6af232,#50d8c422);border:1px solid #8d8bea4b;color:#c7bfff}
+    .drop-icon svg{height:28px;width:28px}
+    .drop-title{font-size:19px;font-weight:780;letter-spacing:-.3px;margin:0 0 4px}
+    .drop-desc{color:var(--muted);font-size:13px;margin:0}
+    .browse{font-weight:750;color:#b8aefe}
+    .formatsline{font-size:12px;color:var(--sub);margin-top:19px}
+    .fileinput{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+    .filecard{display:none;align-items:center;gap:13px;padding:15px;background:#0c1326;border:1px solid var(--line);border-radius:14px;margin-top:15px;text-align:left}
+    .filecard.visible{display:flex}
+    .fileicon{flex:none;height:48px;width:48px;background:#a291ff22;color:#bfb4ff;border-radius:11px;display:grid;place-items:center}
+    .fileicon svg{height:24px;width:24px}
+    .filemeta{min-width:0;flex:1}
+    .filename{font-weight:720;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .filesize{font-size:12px;color:var(--sub);margin-top:2px}
+    .remove{border:0;border-radius:8px;background:transparent;color:var(--muted);display:grid;place-items:center;height:32px;width:32px}
+    .remove:hover{background:#273047;color:white}
+    .settings{display:grid;grid-template-columns:minmax(0,1fr) 54px minmax(0,1fr);align-items:end;gap:13px;margin-top:19px}
+    .field label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.75px;margin-bottom:8px;font-weight:760}
+    .selectwrap{position:relative}
+    .selectwrap select{width:100%;appearance:none;color:var(--text);background:#0c1326;border:1px solid #35405b;padding:14px 40px 14px 16px;border-radius:11px;font-weight:730;min-height:52px;cursor:pointer}
+    select:disabled{opacity:.65;cursor:not-allowed}
+    .selectwrap:after{content:"⌄";font-size:22px;position:absolute;right:15px;top:7px;color:#a8b3ce;pointer-events:none}
+    select option{background:#131b2c;color:white}
+    .switch{border:1px solid #37415e;height:51px;display:grid;place-items:center;border-radius:12px;color:#a89aff;font-size:22px;background:#192138}
+    .convertbtn{height:54px;border:0;background:linear-gradient(90deg,#9685ff,#776ef6);color:#fff;border-radius:12px;width:100%;margin-top:19px;font-weight:820;font-size:15px;box-shadow:0 12px 27px rgba(101,93,240,.22);display:flex;justify-content:center;align-items:center;gap:10px;transition:transform .15s ease,filter .15s}
+    .convertbtn svg{width:19px;height:19px}
+    .convertbtn:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.09)}
+    .convertbtn:disabled{cursor:not-allowed;filter:saturate(.38);opacity:.65;box-shadow:none}
+    .status{display:none;margin-top:16px;border:1px solid var(--line);border-radius:12px;padding:13px 14px;background:#10192c}
+    .status.visible{display:block}
+    .status.error{border-color:#fc8e8e65;background:#b94c4c0c}
+    .status.success{border-color:#60e1be59;background:#2bbc9d0d}
+    .statusrow{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px}
+    .statusrow b{font-weight:700}
+    .status small{display:block;color:var(--muted);font-size:12px;margin-top:6px}
+    .progress{height:5px;border-radius:99px;overflow:hidden;background:#303651;margin-top:12px}
+    .progress span{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--teal));transition:width .18s}
+    .progress.indeterminate span{width:42%;animation:slide 1.15s ease-in-out infinite alternate}
+    @keyframes slide{from{transform:translateX(-100%)}to{transform:translateX(230%)}}
+    .downloadbtn{display:none;border:1px solid #4eddb8;color:#7ee8cf;background:#1ab99814;padding:8px 12px;border-radius:9px;font-size:12px;font-weight:750;white-space:nowrap}
+    .downloadbtn.visible{display:inline-flex;align-items:center;gap:7px}
+    .under{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:25px;margin:21px 0 0;color:var(--sub);font-size:12px}
+    .under span{display:flex;gap:7px;align-items:center}
+    .under svg{width:16px;height:16px;color:#79dbc7}
+    .quick{max-width:900px;margin:32px auto 0;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:9px}
+    .quick-label{font-size:12px;color:var(--sub);margin-right:3px}
+    .quick button{padding:9px 13px;background:#171e31;border:1px solid #303a53;color:#b7c2d5;border-radius:9px;font-size:12px;font-weight:690}
+    .quick button:hover{border-color:#988bff;color:white}
+    .section{padding-top:96px}
+    .section-heading{text-align:center;margin-bottom:31px}
+    .smallcaps{color:#a799ff;font-size:12px;font-weight:820;letter-spacing:1.8px;text-transform:uppercase}
+    h2{font-size:clamp(26px,3.5vw,37px);letter-spacing:-1.3px;margin:8px 0 9px;line-height:1.2}
+    .section-heading p{margin:0;color:var(--muted);font-size:14px}
+    .categorygrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
+    .category{display:block;text-align:left;background:var(--panel);border:1px solid #26344e;padding:23px 20px;border-radius:17px;color:var(--text);min-height:175px;transition:transform .18s,border-color .18s}
+    .category:hover{border-color:#8c83e9;transform:translateY(-3px)}
+    .cat-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:var(--tonebg,#322958);color:var(--tone,#b8a6ff);margin-bottom:18px}
+    .cat-icon svg{width:23px;height:23px}
+    .category strong{display:block;font-size:14px;font-weight:780;margin-bottom:4px}
+    .category small{font-size:12px;color:var(--sub)}
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:17px;margin-top:35px}
+    .step{border:1px solid var(--line);background:#101829;border-radius:17px;padding:24px}
+    .number{color:var(--teal);font-size:12px;font-weight:800;letter-spacing:1px}
+    .step h3{font-size:17px;margin:12px 0 7px}
+    .step p{font-size:13px;color:var(--muted);margin:0;line-height:1.8}
+    .footnote{border-radius:17px;background:linear-gradient(105deg,#171c39,#0e2430);border:1px solid #32465d;display:flex;align-items:center;gap:19px;padding:22px 25px;margin:90px 0 35px}
+    .footnote-icon{height:45px;width:45px;background:#89e6d81a;border-radius:13px;display:grid;place-items:center;color:#7ddecf;flex:none}
+    .footnote h3{margin:0 0 3px;font-size:15px}
+    .footnote p{margin:0;font-size:13px;color:var(--muted);line-height:1.6}
+    .footer{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:28px 0 34px;border-top:1px solid var(--line);color:var(--sub);font-size:12px}
+    .footerlinks{display:flex;gap:23px}
+    @media(max-width:760px){
+      .shell{padding:0 18px}.topinner{height:70px}.navlinks{display:none}.brand{font-size:18px}.hero{padding:54px 0 34px}h1{letter-spacing:-1.7px}.subtitle{font-size:15px}
+      .converter{padding:15px;border-radius:17px}.conv-head{margin:3px 3px 16px}.secure{font-size:10px}.dropzone{min-height:200px;padding:18px}
+      .settings{gap:8px;grid-template-columns:minmax(0,1fr) 35px minmax(0,1fr)}.switch{height:51px;font-size:17px}
+      .selectwrap select{padding:12px 30px 12px 11px;font-size:13px}.selectwrap:after{right:9px}
+      .under{gap:13px;font-size:11px}.quick{margin-top:24px}.quick-label{width:100%;text-align:center}
+      .section{padding-top:70px}.categorygrid{grid-template-columns:repeat(2,1fr);gap:10px}.category{padding:19px 16px;min-height:158px}.steps{grid-template-columns:1fr}.footnote{margin-top:65px;padding:19px 18px;align-items:flex-start}.footer{flex-direction:column;align-items:flex-start}.footerlinks{flex-wrap:wrap}
+    }
+    @media(max-width:400px){.outlinebtn{padding:8px 9px;font-size:11px}.drop-title{font-size:17px}.secure{display:none}.cat-icon{margin-bottom:12px}.category{min-height:146px}.selectwrap select{font-size:12px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+  </style>
 </head>
 <body>
-
-<div class="card">
-    <div class="stickers">🥺💖🌸</div>
-    <h1>Будешь моей девушкой?</h1>
-    <div class="buttons">
-        <button id="yes">Да 💕</button>
-        <button id="no">Нет 🙈</button>
+  <header class="topbar">
+    <div class="shell topinner">
+      <a class="brand" href="#top" aria-label="FluxConvert, наверх"><span class="brandmark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="m7 5-4 4 4 4M17 19l4-4-4-4M3 9h12a6 6 0 0 1 6 6M21 15H9a6 6 0 0 1-6-6"/></svg></span><span>Flux<b>Convert</b></span></a>
+      <nav class="navlinks"><a href="#converter">Конвертер</a><a href="#formats">Форматы</a><a href="#how">Как работает</a></nav>
+      <div class="topright"><a class="outlinebtn" href="#formats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>Все форматы</a></div>
     </div>
-</div>
-
-<script>
-let noTexts=[
-    "Точно нет? 😢",
-    "Совсем-совсем? 🥺",
-    "Не передумаешь? 💔",
-    "Я буду хорошим 😭",
-    "Последний шанс 😳",
-    "Ну пожа-а-алуйста 😖",
-    "Ты уверена? 😞"
-];
-
-let noCount=0;
-let yesScale=1;
-let noScale=1;
-
-document.getElementById("no").onclick=()=>{
-    if(noCount<noTexts.length){
-        document.getElementById("no").innerText=noTexts[noCount];
+  </header>
+  <main class="shell" id="top">
+    <section class="hero">
+      <div class="eyebrow"><span class="pulse"></span><span id="count">Множество форматов в одном месте</span></div>
+      <h1>Любой файл.<br/><span class="gradient">Нужный формат.</span></h1>
+      <p class="subtitle">Документы, изображения, презентации, таблицы, музыка и видео — удобная конвертация без лишних шагов.</p>
+    </section>
+    <section class="converter" id="converter" aria-label="Конвертер файлов">
+      <div class="conv-head"><strong>Конвертер файлов</strong><div class="secure"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Временные файлы удаляются</div></div>
+      <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Выбрать файл или перетащить его сюда">
+        <input class="fileinput" id="file" type="file" aria-label="Выбрать файл" />
+        <div><div class="drop-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></div>
+          <p class="drop-title">Перетащите файл сюда</p><p class="drop-desc">или <span class="browse">выберите на устройстве</span></p><div class="formatsline" id="maxSize">JPG, PNG, PDF, DOCX, PPTX, XLSX, MP4 и другие</div></div>
+      </div>
+      <div class="filecard" id="filecard" aria-live="polite"><div class="fileicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h8l5 5v15H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg></div><div class="filemeta"><div class="filename" id="filename"></div><div class="filesize" id="filesize"></div></div><button class="remove" type="button" id="remove" title="Убрать файл" aria-label="Убрать файл">✕</button></div>
+      <div class="settings"><div class="field"><label for="source">Исходный формат</label><div class="selectwrap"><select id="source" disabled><option value="">Выберите файл</option></select></div></div><div class="switch" aria-hidden="true">→</div><div class="field"><label for="target">Преобразовать в</label><div class="selectwrap"><select id="target" disabled><option value="">Формат</option></select></div></div></div>
+      <button class="convertbtn" id="convert" type="button" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m7 7 10 10M17 7v10H7"/></svg>Конвертировать файл</button>
+      <div class="status" id="status" aria-live="polite"><div class="statusrow"><b id="statusTitle">Обработка</b><a id="download" class="downloadbtn" download>↓ Скачать</a></div><small id="statusDesc"></small><div class="progress" id="progress"><span id="progressFill"></span></div></div>
+    </section>
+    <div class="under"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg>Без регистрации</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 8l10 5 10-5-10-5ZM2 12l10 5 10-5M2 16l10 5 10-5"/></svg>Разные типы файлов</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>Простой процесс</span></div>
+    <div class="quick"><span class="quick-label">Популярные конвертации:</span><button type="button" data-quick="jpg:png">JPG → PNG</button><button type="button" data-quick="docx:pdf">Word → PDF</button><button type="button" data-quick="pdf:docx">PDF → Word</button><button type="button" data-quick="pptx:pdf">PPTX → PDF</button><button type="button" data-quick="xlsx:pdf">Excel → PDF</button></div>
+    <section class="section" id="formats"><div class="section-heading"><span class="smallcaps">Всё в одном месте</span><h2>Один конвертер. Разные задачи.</h2><p>Выберите категорию — и преобразуйте файл в нужный формат.</p></div>
+      <div class="categorygrid">
+        <button class="category" data-group="images"><span class="cat-icon" style="--tonebg:#322858;--tone:#ae9cfa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m3 17 6-6 4 4 3-3 5 5"/></svg></span><strong>Изображения</strong><small>JPG · PNG · WEBP · GIF</small></button>
+        <button class="category" data-group="documents"><span class="cat-icon" style="--tonebg:#273d52;--tone:#79c4fe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 2h7l6 6v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M14 2v6h6M9 13h7M9 17h7"/></svg></span><strong>Word и PDF</strong><small>DOCX · PDF · DOC · ODT</small></button>
+        <button class="category" data-group="presentations"><span class="cat-icon" style="--tonebg:#493327;--tone:#ffbb87"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M12 17v4M8 21h8M7 8h10M7 12h7"/></svg></span><strong>Презентации</strong><small>PPTX · PPT · ODP · PDF</small></button>
+        <button class="category" data-group="spreadsheets"><span class="cat-icon" style="--tonebg:#1f443d;--tone:#73dfb0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M10 3v18"/></svg></span><strong>Таблицы</strong><small>XLSX · XLS · CSV · PDF</small></button>
+        <button class="category" data-group="audio"><span class="cat-icon" style="--tonebg:#43314c;--tone:#efa1dd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l12-2v13M9 8l12-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="18" cy="16" rx="3" ry="2"/></svg></span><strong>Аудиофайлы</strong><small>MP3 · WAV · FLAC · M4A</small></button>
+        <button class="category" data-group="video"><span class="cat-icon" style="--tonebg:#293f51;--tone:#8fd8ff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="15" height="14" rx="2"/><path d="m18 10 4-3v10l-4-3M9 9l5 3-5 3Z"/></svg></span><strong>Видеофайлы</strong><small>MP4 · WEBM · MKV</small></button>
+        <button class="category" data-group="pdf"><span class="cat-icon" style="--tonebg:#482d35;--tone:#ff9da8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l5 5v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M15 3v6h5M8 14h8M8 18h6"/></svg></span><strong>PDF-инструменты</strong><small>PDF → Word · TXT · PNG</small></button>
+        <button class="category" data-group="all"><span class="cat-icon" style="--tonebg:#35325b;--tone:#aeaafa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><strong>Все форматы</strong><small id="formatTotal">Каталог форматов</small></button>
+      </div>
+    </section>
+    <section class="section" id="how"><div class="section-heading"><span class="smallcaps">Три простых шага</span><h2>Как это работает?</h2><p>Никаких сложных программ и настроек.</p></div><div class="steps"><article class="step"><span class="number">01 / ЗАГРУЗКА</span><h3>Выберите файл</h3><p>Нажмите на область загрузки или просто перетащите туда файл со своего устройства.</p></article><article class="step"><span class="number">02 / ФОРМАТ</span><h3>Укажите результат</h3><p>Выберите выходной формат из списка доступных вариантов для конкретного файла.</p></article><article class="step"><span class="number">03 / ГОТОВО</span><h3>Скачайте результат</h3><p>После обработки скачайте новый файл. Для PDF → изображения получите ZIP со страницами.</p></article></div></section>
+    <div class="footnote"><div class="footnote-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 6v6c0 5.5 3.4 8.8 9 10 5.6-1.2 9-4.5 9-10V6l-9-4Z"/><path d="m8 12 3 3 5-6"/></svg></div><div><h3>Важное о качестве и конфиденциальности</h3><p>JPG, PNG и WEBP можно преобразовать прямо в браузере, без отправки на сервер. Остальные файлы обрабатываются временно и удаляются после выдачи результата. Сложная верстка PDF → Word может восстановиться не полностью.</p></div></div>
+  </main>
+  <footer class="shell footer"><div>© <span id="year"></span> FluxConvert · Удобный конвертер файлов</div><div class="footerlinks"><a href="#converter">Конвертировать</a><a href="#formats">Поддерживаемые форматы</a><a href="#how">Как это работает</a></div></footer>
+  <script>
+    'use strict';
+    const FALLBACK_MATRIX = {"jpg":["png","webp","bmp","gif","tiff","pdf"],"jpeg":["png","webp","bmp","gif","tiff","pdf"],"png":["jpg","webp","bmp","gif","tiff","pdf"],"webp":["png","jpg","bmp","gif","tiff","pdf"],"bmp":["png","jpg","webp","gif","tiff","pdf"],"gif":["png","jpg","webp","bmp","tiff","pdf"],"tif":["png","jpg","webp","bmp","gif","tiff","pdf"],"tiff":["png","jpg","webp","bmp","gif","pdf"],"ico":["png","jpg","webp","bmp","gif","tiff","pdf"],"doc":["docx","odt","rtf","pdf","txt"],"docx":["doc","odt","rtf","pdf","txt"],"odt":["docx","doc","rtf","pdf","txt"],"rtf":["docx","odt","pdf","txt"],"txt":["docx","odt","rtf","pdf"],"xls":["xlsx","ods","csv","pdf"],"xlsx":["xls","ods","csv","pdf"],"ods":["xlsx","xls","csv","pdf"],"csv":["xlsx","ods","pdf"],"ppt":["pptx","odp","pdf"],"pptx":["ppt","odp","pdf"],"odp":["pptx","ppt","pdf"],"mp3":["wav","ogg","flac","m4a","aac"],"wav":["mp3","ogg","flac","m4a","aac"],"ogg":["mp3","wav","flac","m4a","aac"],"flac":["mp3","wav","ogg","m4a","aac"],"m4a":["mp3","wav","ogg","flac","aac"],"aac":["mp3","wav","ogg","flac","m4a"],"wma":["mp3","wav","ogg","flac","m4a","aac"],"mp4":["webm","mkv","mp3","wav","m4a"],"mov":["mp4","webm","mkv","mp3","wav","m4a"],"mkv":["mp4","webm","mp3","wav","m4a"],"webm":["mp4","mkv","mp3","wav","m4a"],"avi":["mp4","webm","mkv","mp3","wav","m4a"],"pdf":["docx","txt","png","jpg"]};
+    const CATEGORY_FILES = {images:['jpg','jpeg','png','webp','bmp','gif','tif','tiff','ico'], documents:['doc','docx','odt','rtf','txt','pdf'], presentations:['ppt','pptx','odp'], spreadsheets:['xls','xlsx','ods','csv'],audio:['mp3','wav','ogg','flac','m4a','aac','wma'],video:['mp4','mov','mkv','avi','webm'],pdf:['pdf']};
+    const $ = id => document.getElementById(id);
+    const dropzone=$('dropzone'), fileInput=$('file'), sourceSelect=$('source'), targetSelect=$('target'), convertBtn=$('convert');
+    let matrix=FALLBACK_MATRIX, chosenFile=null, selectedTarget=null, busy=false, downloadUrl=null, maxMb=80;
+    const isLocalImage = (src, target) => ['jpg','jpeg','png','webp'].includes(src) && ['jpg','png','webp'].includes(target);
+    const ext = filename => (filename.split('.').pop() || '').toLowerCase();
+    const size = bytes => bytes < 1024 ? bytes+' B' : bytes < 1048576 ? (bytes/1024).toFixed(1)+' KB' : (bytes/1048576).toFixed(2)+' MB';
+    const pretty = format => format==='jpg' ? 'JPG / JPEG' : format.toUpperCase();
+    $('year').textContent=new Date().getFullYear();
+    async function syncFormats(){
+      try { const response=await fetch('/api/formats',{signal:AbortSignal.timeout(2500)}); if(response.ok){const data=await response.json();matrix=data.matrix;maxMb=data.max_upload_mb||80;} } catch(e){}
+      const combos=Object.values(matrix).reduce((n,x)=>n+x.length,0);
+      $('count').textContent=combos+' вариантов конвертации';
+      $('formatTotal').textContent=Object.keys(matrix).length+' исходных форматов';
+      $('maxSize').textContent='Макс. '+maxMb+' МБ · JPG, PNG, PDF, DOCX, PPTX, XLSX, MP4…';
+      fileInput.accept=Object.keys(matrix).map(k=>'.'+k).join(',');
     }
-    noCount++;
-
-    noScale*=0.8;
-    yesScale*=1.3;
-
-    document.getElementById("no").style.transform=`scale(${noScale})`;
-    document.getElementById("yes").style.transform=`scale(${yesScale})`;
-};
-
-document.getElementById("yes").onclick=()=>{
-    document.body.innerHTML=`
-    <div style="
-        display:flex;
-        flex-direction:column;
-        justify-content:center;
-        align-items:center;
-        height:100vh;
-        background:linear-gradient(135deg,#ff9a9e,#fad0c4);
-        font-family:'Segoe UI',sans-serif;
-        text-align:center;
-    ">
-        <h1 style="color:#ff4d6d;font-size:50px;">Урааа! 💖🥰</h1>
-        <div style="font-size:60px;">🎉💑🌸💞</div>
-    </div>`;
-};
-</script>
-
+    function clearStatus(){
+      $('status').className='status';$('download').classList.remove('visible');$('progress').hidden=false;$('progress').className='progress';$('progressFill').style.width='0%';
+      if(downloadUrl){URL.revokeObjectURL(downloadUrl);downloadUrl=null;}
+    }
+    function status(title,desc,mode){
+      $('status').className='status visible'+(mode==='error'?' error':mode==='success'?' success':'');
+      $('statusTitle').textContent=title;$('statusDesc').textContent=desc;
+      $('progress').hidden=(mode==='error'||mode==='success');
+    }
+    function reset(){
+      if(busy)return;
+      chosenFile=null;selectedTarget=null;fileInput.value='';$('filecard').classList.remove('visible');
+      sourceSelect.innerHTML='<option value="">Выберите файл</option>';sourceSelect.disabled=true;
+      targetSelect.innerHTML='<option value="">Формат</option>';targetSelect.disabled=true;convertBtn.disabled=true;
+      clearStatus();
+    }
+    function setFile(file){
+      if(busy||!file)return;
+      clearStatus();
+      const extension=ext(file.name);
+      if(!Object.hasOwn(matrix,extension)){status('Формат не поддерживается','Попробуйте другой тип файла из доступных категорий.','error');return;}
+      if(file.size>maxMb*1024*1024){status('Файл слишком большой','Максимальный размер — '+maxMb+' МБ.','error');return;}
+      if(!file.size){status('Пустой файл','Выберите непустой файл.','error');return;}
+      chosenFile=file;
+      $('filename').textContent=file.name;$('filesize').textContent=size(file.size)+' · '+extension.toUpperCase();$('filecard').classList.add('visible');
+      sourceSelect.disabled=false;sourceSelect.innerHTML='';sourceSelect.add(new Option(pretty(extension),extension,true,true));
+      targetSelect.disabled=false;targetSelect.innerHTML='';
+      for(const type of matrix[extension]){const label=extension==='pdf'&&['png','jpg'].includes(type)?pretty(type)+' (ZIP со страницами)':pretty(type);targetSelect.add(new Option(label,type));}
+      if(selectedTarget&&matrix[extension].includes(selectedTarget))targetSelect.value=selectedTarget;
+      selectedTarget=targetSelect.value;
+      convertBtn.disabled=false;
+    }
+    dropzone.addEventListener('click',()=>!busy&&fileInput.click());
+    dropzone.addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&!busy){event.preventDefault();fileInput.click();}});
+    fileInput.addEventListener('change',()=>setFile(fileInput.files[0]));
+    ['dragenter','dragover'].forEach(type=>dropzone.addEventListener(type,e=>{e.preventDefault();e.stopPropagation();dropzone.classList.add('dragover');}));
+    ['dragleave','drop'].forEach(type=>dropzone.addEventListener(type,e=>{e.preventDefault();e.stopPropagation();dropzone.classList.remove('dragover');}));
+    dropzone.addEventListener('drop',e=>setFile(e.dataTransfer.files[0]));
+    $('remove').addEventListener('click',reset);
+    targetSelect.addEventListener('change',()=>{selectedTarget=targetSelect.value;clearStatus();});
+    for(const button of document.querySelectorAll('[data-group]'))button.addEventListener('click',()=>{document.getElementById('converter').scrollIntoView({behavior:'smooth',block:'center'});if(!chosenFile){status('Выберите файл','Эта категория поддерживает: '+(CATEGORY_FILES[button.dataset.group]||Object.keys(matrix)).join(', ').toUpperCase(),null);}else{fileInput.click();}});
+    for(const button of document.querySelectorAll('[data-quick]'))button.addEventListener('click',()=>{const [from,to]=button.dataset.quick.split(':');if(chosenFile&&[from,from==='jpg'?'jpeg':from].includes(ext(chosenFile.name))&&matrix[ext(chosenFile.name)].includes(to)){targetSelect.value=to;selectedTarget=to;clearStatus();}else{status('Выберите файл '+from.toUpperCase(),'После загрузки выберите формат '+to.toUpperCase()+'.',null);fileInput.click();}document.getElementById('converter').scrollIntoView({behavior:'smooth',block:'center'});});
+    function imageConvertInBrowser(file,target){
+      return new Promise((resolve,reject)=>{
+        const img=new Image();const url=URL.createObjectURL(file);
+        img.onload=()=>{
+          try{const canvas=document.createElement('canvas');canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
+            const ctx=canvas.getContext('2d');if(target==='jpg'){ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);}
+            ctx.drawImage(img,0,0);canvas.toBlob(blob=>{URL.revokeObjectURL(url);if(blob&&blob.type===(target==='jpg'?'image/jpeg':target==='png'?'image/png':'image/webp'))resolve(blob);else reject(new Error('Браузер не поддерживает сохранение в выбранном формате.'));},target==='jpg'?'image/jpeg':target==='png'?'image/png':'image/webp',.92);
+          }catch(error){URL.revokeObjectURL(url);reject(error);}
+        };
+        img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Не удалось прочитать изображение.'));};img.src=url;
+      });
+    }
+    function serverConvert(file,target){
+      return new Promise((resolve,reject)=>{
+        const req=new XMLHttpRequest();req.open('POST','/api/convert');req.responseType='blob';req.timeout=150000;
+        req.upload.onprogress=event=>{if(event.lengthComputable){const p=Math.round(event.loaded/event.total*100);$('statusDesc').textContent='Загрузка на сервер: '+p+'%';$('progressFill').style.width=p+'%';}};
+        req.upload.onload=()=>{status('Идёт конвертация','Сервер обрабатывает файл. Это может занять некоторое время.');$('progress').classList.add('indeterminate');};
+        req.onload=async()=>{
+          if(req.status>=200&&req.status<300){resolve(req.response);}else{
+            let msg='Не удалось конвертировать файл.';
+            try{const text=await req.response.text();msg=JSON.parse(text).detail||msg;}catch(e){}
+            reject(new Error(msg));
+          }
+        };
+        req.onerror=()=>reject(new Error('Нет соединения с сервером. Для Word, PDF и видео необходим запущенный backend.'));
+        req.ontimeout=()=>reject(new Error('Время конвертации истекло. Попробуйте файл меньшего размера.'));
+        const form=new FormData();form.append('file',file,file.name);form.append('target',target);req.send(form);
+      });
+    }
+    convertBtn.addEventListener('click',async()=>{
+      if(!chosenFile||busy)return;
+      const file=chosenFile,from=ext(file.name),to=targetSelect.value;
+      if(!to)return;
+      busy=true;convertBtn.disabled=true;fileInput.disabled=true;targetSelect.disabled=true;clearStatus();
+      const local=isLocalImage(from,to);
+      status('Подготавливаем файл',local?'Изображение обрабатывается прямо в вашем браузере.':'Начинаем безопасную загрузку…');
+      if(local){$('progress').classList.add('indeterminate');}
+      try{
+        const blob=local?await imageConvertInBrowser(file,to):await serverConvert(file,to);
+        downloadUrl=URL.createObjectURL(blob);
+        const targetExt=from==='pdf'&&['png','jpg'].includes(to)?'zip':to;
+        $('download').href=downloadUrl;$('download').download=file.name.replace(/\.[^.]+$/,'')+'.'+targetExt;
+        $('download').classList.add('visible');
+        status('Файл готов!','Успешно: '+size(blob.size)+(local?' · без загрузки на сервер':' · готов к скачиванию'),'success');
+      }catch(error){status('Не удалось конвертировать',error.message||'Попробуйте другой файл.','error');}
+      finally{busy=false;convertBtn.disabled=false;fileInput.disabled=false;targetSelect.disabled=false;$('progress').classList.remove('indeterminate');}
+    });
+    syncFormats();
+  </script>
 </body>
 </html>

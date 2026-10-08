@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: fluxconvert-nurislombek
+    runtime: docker
+    plan: free
+    branch: fluxconvert
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: MAX_UPLOAD_MB
+        value: "80"
+      - key: MAX_OUTPUT_MB
+        value: "160"
+      - key: MAX_PDF_PAGES
+        value: "60"
+      - key: CONVERT_TIMEOUT
+        value: "120"

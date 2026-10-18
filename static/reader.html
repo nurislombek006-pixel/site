@@ -65,6 +65,19 @@
     .exit-button{width:100%;margin-top:25px;background:#303c51;color:#fff;border:1px solid #5e6b81;border-radius:10px;padding:13px;font-weight:750}
     .tip{margin:12px 0 0;color:#98a6bb;font-size:11px;line-height:1.5}
     .dim{position:fixed;inset:0;z-index:100;background:black;opacity:0;pointer-events:none}
+
+    .library{margin-top:27px;text-align:left}
+    .library-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;font-weight:800;font-size:15px}
+    .library-heading small{font-size:12px;font-weight:500;color:var(--muted)}
+    .library-items{display:grid;gap:9px}
+    .book-item{display:flex;min-width:0;align-items:stretch;border:1px solid var(--stroke);border-radius:12px;background:var(--panel);overflow:hidden}
+    .book-choice{min-width:0;flex:1;text-align:left;color:var(--ink);border:0;background:transparent;padding:13px 14px}
+    .book-choice:hover{background:#ffffff0b}
+    .book-item-title{display:block;font-size:13px;font-weight:750;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+    .book-item-info{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+    .book-delete{flex:none;background:transparent;color:var(--muted);border:0;border-left:1px solid var(--stroke);padding:0 14px;font-size:18px}
+    .book-delete:hover{color:#ffc0c0;background:#ffffff0b}
+    .library-note{text-align:left;margin:12px 3px 0;font-size:11px;line-height:1.5;color:#8592a8}
     @media(max-width:640px){.top{padding:18px}.landing{padding:26px 16px 70px;align-items:flex-start;padding-top:clamp(80px,15vh,140px)}.import-box{padding:15px}.paper{height:100%;width:100%;border-radius:0;box-shadow:none;padding:clamp(20px,5vw,35px)}.bookstage{padding:0}.flip-sheet{padding:clamp(20px,5vw,35px)}.reader{--fontSize:19px}}
     @media(prefers-reduced-motion:reduce){.flip-sheet.forward,.flip-sheet.backward{animation-duration:.01ms}*{transition-duration:.01ms!important}}
   </style>
@@ -94,6 +107,11 @@
           <div class="formats">DOC, DOCX, TXT, PDF, EPUB, FB2, RTF, ODT, HTML, MD · до 80 МБ</div>
           <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
         </div>
+        <section id="library" class="library" hidden aria-label="Сохранённые книги">
+          <div class="library-heading"><span>Мои книги</span><small id="libraryCount"></small></div>
+          <div id="libraryItems" class="library-items"></div>
+          <p class="library-note">Книги хранятся только в этом браузере. Повторно загружать их не нужно.</p>
+        </section>
       </div>
     </main>
   </div>
@@ -151,13 +169,135 @@
     };
     const fonts={book:'Georgia,"Times New Roman",serif',classic:'"Times New Roman",Georgia,serif',sans:'-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif'};
     const defaults={theme:'cream',fontFamily:'book',fontSize:21,lineHeight:1.7,letterSpacing:0,darkness:0};
-    let prefs={...defaults},selectedFile=null,bookText='',bookName='',pageStarts=[0],pageContents=[],current=0,working=false,turning=false,swipeStart=null,suppressClickUntil=0,resizeTimer=null,loading=false;
+    let prefs={...defaults},selectedFile=null,bookText='',bookName='',pageStarts=[0],pageContents=[],current=0,turning=false,swipeStart=null,suppressClickUntil=0,resizeTimer=null,loading=false,cacheWarning='',progressTimer=null;
+    const DB_NAME='fluxconvert-local-library',DB_VERSION=1;
+    let databasePromise=null;
+    function database(){
+      if(databasePromise)return databasePromise;
+      databasePromise=new Promise((resolve,reject)=>{
+        if(!('indexedDB' in window)){reject(new Error('Хранилище браузера недоступно.'));return;}
+        const request=indexedDB.open(DB_NAME,DB_VERSION);
+        request.onupgradeneeded=()=>{
+          const db=request.result;
+          if(!db.objectStoreNames.contains('books'))db.createObjectStore('books',{keyPath:'id'});
+          if(!db.objectStoreNames.contains('contents'))db.createObjectStore('contents',{keyPath:'id'});
+        };
+        request.onsuccess=()=>{
+          const db=request.result;
+          db.onversionchange=()=>{db.close();databasePromise=null;};
+          resolve(db);
+        };
+        request.onerror=()=>reject(request.error||new Error('Ошибка хранилища.'));
+        request.onblocked=()=>reject(new Error('Хранилище занято другой вкладкой.'));
+      }).catch(error=>{databasePromise=null;throw error;});
+      return databasePromise;
+    }
+    async function dbRead(store,id){
+      const db=await database();
+      return new Promise((resolve,reject)=>{
+        const tx=db.transaction(store,'readonly');
+        const request=tx.objectStore(store).get(id);
+        request.onsuccess=()=>resolve(request.result||null);
+        request.onerror=()=>reject(request.error);
+        tx.onabort=()=>reject(tx.error);
+      });
+    }
+    async function savedBooks(){
+      const db=await database();
+      return new Promise((resolve,reject)=>{
+        const tx=db.transaction('books','readonly');
+        const request=tx.objectStore('books').getAll();
+        request.onsuccess=()=>resolve(request.result.sort((a,b)=>(b.lastRead||0)-(a.lastRead||0)));
+        request.onerror=()=>reject(request.error);
+        tx.onabort=()=>reject(tx.error);
+      });
+    }
+    async function saveBook(id,file,text){
+      const db=await database();
+      return new Promise((resolve,reject)=>{
+        const tx=db.transaction(['books','contents'],'readwrite');
+        const now=Date.now();
+        tx.objectStore('books').put({id,title:file.name,size:file.size,added:now,lastRead:now,position:loadPlace()});
+        tx.objectStore('contents').put({id,text});
+        tx.oncomplete=()=>resolve();
+        tx.onerror=()=>reject(tx.error||new Error('Не удалось сохранить книгу.'));
+        tx.onabort=()=>reject(tx.error||new Error('Не удалось сохранить книгу.'));
+      });
+    }
+    async function deleteBook(id){
+      const db=await database();
+      return new Promise((resolve,reject)=>{
+        const tx=db.transaction(['books','contents'],'readwrite');
+        tx.objectStore('books').delete(id);
+        tx.objectStore('contents').delete(id);
+        tx.oncomplete=()=>resolve();
+        tx.onerror=()=>reject(tx.error);
+        tx.onabort=()=>reject(tx.error);
+      });
+    }
+    async function updateProgress(id,offset){
+      const db=await database();
+      return new Promise((resolve,reject)=>{
+        const tx=db.transaction('books','readwrite');
+        const store=tx.objectStore('books');
+        const request=store.get(id);
+        request.onsuccess=()=>{
+          if(request.result){const item=request.result;item.lastRead=Date.now();item.position=offset;store.put(item);}
+        };
+        tx.oncomplete=()=>resolve();
+        tx.onerror=()=>reject(tx.error);
+        tx.onabort=()=>reject(tx.error);
+      });
+    }
+    function queueProgress(){
+      clearTimeout(progressTimer);
+      if(!bookName)return;
+      const id=bookName,offset=currentOffset();
+      progressTimer=setTimeout(()=>{updateProgress(id,offset).catch(()=>{});},1000);
+    }
+    function textNode(tag,cls,value){
+      const node=document.createElement(tag);
+      if(cls)node.className=cls;
+      node.textContent=value;
+      return node;
+    }
+    async function refreshLibrary(){
+      try{
+        const books=await savedBooks();
+        $('library').hidden=books.length===0;
+        $('libraryCount').textContent=String(books.length);
+        const frag=document.createDocumentFragment();
+        for(const book of books){
+          const item=document.createElement('div');item.className='book-item';
+          const open=document.createElement('button');open.type='button';open.className='book-choice';open.dataset.openBook=book.id;
+          open.appendChild(textNode('span','book-item-title',book.title));
+          const pct=book.size?'Продолжить чтение':'Читать';
+          open.appendChild(textNode('small','book-item-info',pct+' · сохранена на устройстве'));
+          const del=document.createElement('button');del.type='button';del.className='book-delete';del.dataset.deleteBook=book.id;
+          del.setAttribute('aria-label','Удалить книгу '+book.title);del.textContent='×';
+          item.append(open,del);frag.appendChild(item);
+        }
+        $('libraryItems').replaceChildren(frag);
+      }catch(e){
+        $('library').hidden=true;
+      }
+    }
     try{const saved=JSON.parse(localStorage.getItem('flux-reader-settings')||'null');if(saved&&typeof saved==='object')prefs={...defaults,...saved};}catch(e){}
     function savePrefs(){try{localStorage.setItem('flux-reader-settings',JSON.stringify(prefs));}catch(e){}}
     function currentOffset(){return pageStarts[current]||0;}
     function bookmarkKey(){return 'flux-reader-place:'+bookName;}
-    function savePlace(){if(!bookText)return;try{localStorage.setItem(bookmarkKey(),String(currentOffset()));}catch(e){}}
-    function loadPlace(){try{const n=Number(localStorage.getItem(bookmarkKey())||0);return Number.isFinite(n)?Math.max(0,Math.min(bookText.length-1,n)):0;}catch(e){return 0;}}
+    function savePlace(){
+      if(!bookText)return;
+      try{localStorage.setItem(bookmarkKey(),String(currentOffset()));}catch(e){}
+      queueProgress();
+    }
+    function loadPlace(fallback=0){
+      try{
+        const saved=localStorage.getItem(bookmarkKey());
+        const n=saved!==null?Number(saved):Number(fallback);
+        return Number.isFinite(n)?Math.max(0,Math.min(bookText.length-1,n)):0;
+      }catch(e){return Number(fallback)||0;}
+    }
     function applyPrefs(preserve=true){
       const position=preserve&&bookText?currentOffset():0;
       const [bg,surround,color]=colors[prefs.theme]||colors.cream;
@@ -203,6 +343,8 @@
       const length=trimEdge(start,low);
       pageContents[index]=bookText.slice(start,start+length);
       pageStarts[index+1]=start+length;
+      // Keep rendered pages near the current position only; very long books stay lightweight.
+      if(index>6)pageContents[index-6]=undefined;
     }
     function renderPage(){
       if(!bookText)return;
@@ -303,47 +445,91 @@
         }
       }catch(e){}
     }
-    async function openBook(){
-      if(!selectedFile||loading)return;
-      loading=true;
-      $('openBook').disabled=true;
-      $('feedback').textContent='Открываем книгу…';
+    function enterReader(){
       reader.hidden=false;
       $('landingScreen').hidden=true;
       document.body.classList.add('reading');
       pageText.textContent='Открываем книгу…';
       settings.hidden=true;
       doFullscreen();
+    }
+    function openingFailed(error){
+      reader.hidden=true;
+      $('landingScreen').hidden=false;
+      document.body.classList.remove('reading');
+      clearFullscreen();
+      $('feedback').textContent=error.message||'Не удалось открыть книгу.';
+      bookText='';
+      bookName='';
+    }
+    function displayText(text,id,position){
+      bookName=id;bookText=text;
+      if(!bookText)throw new Error('Текст книги не найден.');
+      applyPrefs(false);
+      resetPagination(loadPlace(position));
+      $('feedback').textContent='';
+    }
+    async function openBook(){
+      if(!selectedFile||loading)return;
+      loading=true;
+      $('openBook').disabled=true;
+      $('feedback').textContent='Открываем книгу…';
+      cacheWarning='';
+      enterReader();
       try{
         const file=selectedFile;
-        bookText=await extract(file);
-        if(!bookText)throw new Error('Не найден текст. Возможно, это PDF со сканированными страницами.');
-        bookName=[file.name,file.size,file.lastModified].join(':');
-        applyPrefs(false);
-        resetPagination(loadPlace());
-        $('feedback').textContent='';
-      }catch(e){
-        reader.hidden=true;
-        $('landingScreen').hidden=false;
-        document.body.classList.remove('reading');
-        clearFullscreen();
-        $('feedback').textContent=e.message||'Не удалось открыть книгу.';
-        bookText='';
-      }finally{
+        const id=[file.name,file.size,file.lastModified].join(':');
+        let content=null,metadata=null;
+        try{
+          [content,metadata]=await Promise.all([dbRead('contents',id),dbRead('books',id)]);
+        }catch(e){} // The reader still works when private browsing disables storage.
+        if(content&&typeof content.text==='string'&&content.text.length){
+          displayText(content.text,id,metadata?.position||0);
+        }else{
+          const text=await extract(file);
+          if(!text)throw new Error('Не найден текст. Возможно, это PDF со сканированными страницами.');
+          // Save extracted text, NOT the original upload. Opening it again skips server processing.
+          bookName=id;bookText=text;
+          pageText.textContent='Сохраняем книгу на устройстве…';
+          try{await saveBook(id,file,text);}
+          catch(e){cacheWarning='Книга открыта, но браузер не смог сохранить её для повторного чтения (возможно, недостаточно места).';}
+          displayText(text,id,0);
+        }
+      }catch(e){openingFailed(e);}
+      finally{
         loading=false;
         $('openBook').disabled=false;
+        refreshLibrary();
       }
+    }
+    async function openSavedBook(id){
+      if(loading)return;
+      loading=true;
+      cacheWarning='';
+      $('feedback').textContent='';
+      enterReader();
+      try{
+        const [content,meta]=await Promise.all([dbRead('contents',id),dbRead('books',id)]);
+        if(!content||!content.text)throw new Error('Сохранённая книга не найдена. Загрузите её заново.');
+        displayText(content.text,id,meta?.position||0);
+      }catch(e){openingFailed(e);}
+      finally{loading=false;refreshLibrary();}
     }
     function closeBook(){
       if(loading)return;
+      const id=bookName,offset=currentOffset();
       savePlace();
+      clearTimeout(progressTimer);
+      if(id)updateProgress(id,offset).catch(()=>{});
       settings.hidden=true;
       reader.hidden=true;
       $('landingScreen').hidden=false;
       document.body.classList.remove('reading');
       clearFullscreen();
-      bookText='';
+      bookText='';bookName='';
       pageContents=[];pageStarts=[0];
+      if(cacheWarning)$('feedback').textContent=cacheWarning;
+      refreshLibrary();
     }
     function showSettings(){settings.hidden=!settings.hidden;}
     $('drop').addEventListener('click',e=>{if(e.target!==$('fileInput')){$('fileInput').value='';$('fileInput').click();}});
@@ -353,6 +539,20 @@
     ['dragleave','drop'].forEach(t=>$('drop').addEventListener(t,e=>{e.preventDefault();$('drop').classList.remove('over');}));
     $('drop').addEventListener('drop',e=>selectFile(e.dataTransfer.files[0]));
     $('openBook').addEventListener('click',openBook);
+    $('libraryItems').addEventListener('click',async e=>{
+      const del=e.target.closest('[data-delete-book]');
+      if(del){
+        const id=del.dataset.deleteBook;
+        if(!confirm('Удалить эту книгу с устройства?'))return;
+        try{await deleteBook(id);try{localStorage.removeItem('flux-reader-place:'+id);}catch(e){}await refreshLibrary();}
+        catch(e){$('feedback').textContent='Не удалось удалить книгу.';}
+        return;
+      }
+      const open=e.target.closest('[data-open-book]');
+      if(open)openSavedBook(open.dataset.openBook);
+    });
+    window.addEventListener('pagehide',()=>{if(bookText)savePlace();});
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&bookText)savePlace();});
     $('settingsHotspot').addEventListener('click',e=>{e.stopPropagation();showSettings();});
     $('closeSettings').addEventListener('click',e=>{e.stopPropagation();settings.hidden=true;});
     $('exitBook').addEventListener('click',closeBook);
@@ -402,6 +602,7 @@
       resizeTimer=setTimeout(()=>resetPagination(currentOffset()),180);
     });
     applyPrefs(false);
+    refreshLibrary();
   </script>
 </body>
 </html>

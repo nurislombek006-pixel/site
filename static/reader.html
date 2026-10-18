@@ -43,7 +43,7 @@
     /* No visible controls at all in the immersive reading view. */
     .reader{--pageBg:#f5e7c6;--surround:#d9ccaa;--pageInk:#302a21;--fontSize:21px;--lineHeight:1.7;--fontFamily:Georgia,"Times New Roman",serif;--letterSpacing:0px;position:fixed;inset:0;z-index:30;background:var(--surround);color:var(--pageInk);overflow:hidden;overscroll-behavior:none;touch-action:pan-y}
     .bookstage{height:100%;width:100%;display:flex;justify-content:center;align-items:center;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));perspective:1850px}
-    .paper{width:min(100%,760px);height:min(94%,1000px);background:var(--pageBg);color:var(--pageInk);border-radius:5px;position:relative;display:flex;padding:clamp(22px,4vw,48px);box-shadow:0 12px 35px #0002,inset 9px 0 15px -13px #0007;transition:background .2s;transform-style:preserve-3d}
+    .paper{width:min(100%,760px);height:min(94%,1000px);background:var(--pageBg);color:var(--pageInk);border-radius:5px;position:relative;display:flex;padding:clamp(22px,4vw,48px);padding-bottom:clamp(43px,5vw,65px);box-shadow:0 12px 35px #0002,inset 9px 0 15px -13px #0007;transition:background .2s;transform-style:preserve-3d}
     .page-text{min-height:0;min-width:0;flex:1;white-space:pre-wrap;overflow:hidden;overflow-wrap:anywhere;word-break:normal;font-size:var(--fontSize);line-height:var(--lineHeight);font-family:var(--fontFamily);letter-spacing:var(--letterSpacing);font-weight:400;text-align:left}
     .measure-text{position:fixed;left:-20000px;top:0;height:auto!important;max-height:none!important;flex:none;overflow:visible;visibility:hidden;pointer-events:none}
     .flip-sheet{position:absolute;inset:0;z-index:3;background:var(--pageBg);color:var(--pageInk);padding:clamp(22px,4vw,48px);display:flex;border-radius:5px;box-shadow:0 6px 20px #0004;backface-visibility:hidden;pointer-events:none;will-change:transform}
@@ -51,6 +51,23 @@
     .flip-sheet.backward{transform-origin:right center;animation:turnBackward .55s ease-in forwards}
     @keyframes turnForward{0%{transform:rotateY(0);box-shadow:0 6px 20px #0002}85%{box-shadow:20px 14px 36px #0004}100%{transform:rotateY(-125deg);opacity:.4}}
     @keyframes turnBackward{0%{transform:rotateY(0);box-shadow:0 6px 20px #0002}85%{box-shadow:-20px 14px 36px #0004}100%{transform:rotateY(125deg);opacity:.4}}
+    @media(prefers-reduced-motion:reduce){.upload-track.indeterminate span{animation-duration:.01ms}}
+    .page-number{position:absolute;left:0;right:0;bottom:13px;text-align:center;font:500 12px/1.3 ui-sans-serif,Arial,sans-serif;letter-spacing:.15px;color:var(--pageInk);opacity:.52;pointer-events:none;z-index:2}
+    .loading-panel{position:absolute;inset:0;z-index:80;display:grid;place-items:center;padding:25px;background:#101824eb;color:#f7f7fc}
+    .loading-card{width:min(100%,380px);background:#1b2638;border:1px solid #44536d;border-radius:17px;padding:24px;box-shadow:0 24px 65px #0006;text-align:center}
+    .loading-title{font-size:18px;font-weight:800;letter-spacing:-.3px}
+    .loading-message{margin:11px auto 0;color:#b8c5d9;font-size:13px;line-height:1.55;overflow-wrap:anywhere}
+    .upload-track{height:8px;border-radius:99px;overflow:hidden;background:#3a455c;margin-top:21px}
+    .upload-track span{display:block;height:100%;width:0%;border-radius:99px;background:#a296ff;transition:width .2s ease}
+    .upload-track.indeterminate span{width:35%;animation:loadSweep 1.4s ease-in-out infinite alternate}
+    @keyframes loadSweep{from{transform:translateX(-100%)}to{transform:translateX(300%)}}
+    .upload-percent{margin:11px 0 0;color:#d0c8ff;font-size:13px;font-weight:750;font-variant-numeric:tabular-nums}
+    .cancel-load{margin-top:21px;border:1px solid #60708a;border-radius:9px;padding:9px 20px;background:transparent;color:#d3daea;font-size:13px}
+    .cancel-load:hover{background:#ffffff13}
+    .jump-row{display:flex;gap:8px}
+    .jump-row input{width:100%;min-width:0;border:1px solid #526079;border-radius:8px;background:#101827;color:#f4f5fb;padding:11px}
+    .jump-row button{flex:none;border:0;border-radius:8px;background:#9280ff;color:white;font-size:13px;font-weight:750;padding:9px 14px}
+    .page-hint{margin:6px 0 0;color:#aab6c9;font-size:11px;line-height:1.5}
     .corner-hotspot{position:fixed;z-index:40;top:0;right:0;width:max(58px,calc(42px + env(safe-area-inset-right)));height:max(65px,calc(48px + env(safe-area-inset-top)));opacity:0;border:0;background:transparent;color:transparent;padding:0}
     .settings{position:fixed;z-index:60;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));width:min(340px,calc(100% - 24px));max-height:calc(100dvh - 26px);overflow:auto;overscroll-behavior:contain;background:#1a2231;color:#f4f5fb;box-shadow:0 16px 60px #0007;border-radius:17px;border:1px solid #48506a;padding:18px;text-align:left}
     .setting-title{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:17px;font-weight:800;margin-bottom:19px}
@@ -78,7 +95,7 @@
     .book-delete{flex:none;background:transparent;color:var(--muted);border:0;border-left:1px solid var(--stroke);padding:0 14px;font-size:18px}
     .book-delete:hover{color:#ffc0c0;background:#ffffff0b}
     .library-note{text-align:left;margin:12px 3px 0;font-size:11px;line-height:1.5;color:#8592a8}
-    @media(max-width:640px){.top{padding:18px}.landing{padding:26px 16px 70px;align-items:flex-start;padding-top:clamp(80px,15vh,140px)}.import-box{padding:15px}.paper{height:100%;width:100%;border-radius:0;box-shadow:none;padding:clamp(20px,5vw,35px)}.bookstage{padding:0}.flip-sheet{padding:clamp(20px,5vw,35px)}.reader{--fontSize:19px}}
+    @media(max-width:640px){.top{padding:18px}.landing{padding:26px 16px 70px;align-items:flex-start;padding-top:clamp(80px,15vh,140px)}.import-box{padding:15px}.paper{height:100%;width:100%;border-radius:0;box-shadow:none;padding:clamp(20px,5vw,35px);padding-bottom:53px}.bookstage{padding:0}.flip-sheet{padding:clamp(20px,5vw,35px)}.reader{--fontSize:19px}}
     @media(prefers-reduced-motion:reduce){.flip-sheet.forward,.flip-sheet.backward{animation-duration:.01ms}*{transition-duration:.01ms!important}}
   </style>
 </head>
@@ -117,12 +134,27 @@
   </div>
   <div class="reader" id="reader" hidden aria-label="Режим чтения">
     <div class="bookstage">
-      <div id="paper" class="paper"><div id="pageText" class="page-text"></div></div>
+      <div id="paper" class="paper"><div id="pageText" class="page-text"></div><div id="pageNumber" class="page-number" aria-live="off"></div></div>
     </div>
     <div id="measure" class="page-text measure-text" aria-hidden="true"></div>
+    <div class="loading-panel" id="loadingPanel" hidden role="status" aria-live="polite">
+      <div class="loading-card">
+        <div class="loading-title" id="loadTitle">Загрузка книги</div>
+        <div class="loading-message" id="loadMessage">Подготавливаем файл…</div>
+        <div class="upload-track" id="uploadTrack"><span id="uploadFill"></span></div>
+        <div class="upload-percent" id="uploadPercent">0%</div>
+        <button type="button" class="cancel-load" id="cancelLoad">Отменить</button>
+      </div>
+    </div>
     <button type="button" class="corner-hotspot" id="settingsHotspot" aria-label="Настройки чтения" title="Настройки чтения"></button>
     <aside id="settings" class="settings" hidden aria-label="Настройки чтения">
       <div class="setting-title">Настройки <button id="closeSettings" type="button" class="close-settings" aria-label="Закрыть настройки">×</button></div>
+      <label class="setting-label" for="jumpPage">Перейти на страницу</label>
+      <form id="jumpForm" class="jump-row">
+        <input type="number" min="1" step="1" id="jumpPage" inputmode="numeric" placeholder="Номер страницы" required>
+        <button type="submit">Перейти</button>
+      </form>
+      <p class="page-hint" id="pageHint">Номера приблизительные: размер страниц зависит от шрифта и экрана.</p>
       <label class="setting-label">Цвет страниц</label>
       <div class="themes" id="themes">
         <button type="button" class="theme" data-theme="cream" style="--swatch:#f5e7c6" aria-label="Кремовый" title="Кремовый"></button>
@@ -170,6 +202,7 @@
     const fonts={book:'Georgia,"Times New Roman",serif',classic:'"Times New Roman",Georgia,serif',sans:'-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif'};
     const defaults={theme:'cream',fontFamily:'book',fontSize:21,lineHeight:1.7,letterSpacing:0,darkness:0};
     let prefs={...defaults},selectedFile=null,bookText='',bookName='',pageStarts=[0],pageContents=[],current=0,turning=false,swipeStart=null,suppressClickUntil=0,resizeTimer=null,loading=false,cacheWarning='',progressTimer=null;
+    let estimatedPageSize=1050,loadToken=0,activeRequest=null,activeFileReader=null,loadClock=null,loadStart=0,loadPhase='';
     const DB_NAME='fluxconvert-local-library',DB_VERSION=1;
     let databasePromise=null;
     function database(){
@@ -313,8 +346,36 @@
       ['fontSize','lineHeight','letterSpacing','darkness'].forEach(key=>$(key).value=String(prefs[key]));
       $('fontSizeOutput').textContent=String(prefs.fontSize);
       document.querySelectorAll('[data-theme]').forEach(b=>b.classList.toggle('selected',b.dataset.theme===prefs.theme));
-      if(bookText&&preserve)resetPagination(position);
+      if(bookText&&preserve){refreshPageEstimate();resetPagination(position);}
       savePrefs();
+    }
+    function refreshPageEstimate(){
+      if(!bookText||pageText.clientHeight<=0)return;
+      let low=1,high=Math.min(12000,bookText.length);
+      while(low<high){
+        const mid=Math.ceil((low+high)/2);
+        if(fits(0,mid))low=mid;else high=mid-1;
+      }
+      estimatedPageSize=Math.max(1,trimEdge(0,low));
+    }
+    function totalPages(){return Math.max(1,Math.ceil(bookText.length/Math.max(1,estimatedPageSize)));}
+    function numberedPage(){return Math.max(1,Math.min(totalPages(),Math.floor(currentOffset()/Math.max(1,estimatedPageSize))+1));}
+    function updatePageLabel(){
+      const label='Стр. ≈ '+numberedPage()+' / ≈ '+totalPages();
+      $('pageNumber').textContent=label;
+      $('jumpPage').max=String(totalPages());
+      $('pageHint').textContent=label+' · номер приблизительный, зависит от шрифта и размера экрана.';
+    }
+    function jumpToPage(number){
+      if(!bookText||!Number.isInteger(number)||number<1||number>totalPages())return false;
+      // Jump by calibrated character location instead of paginating every page in huge books.
+      const offset=Math.min(bookText.length-1,Math.max(0,(number-1)*estimatedPageSize));
+      const back=bookText.lastIndexOf(' ',offset);
+      const line=bookText.lastIndexOf('\n',offset);
+      const boundary=Math.max(back,line);
+      const aligned=(offset>0&&boundary>=offset-70)?boundary+1:offset;
+      resetPagination(aligned);
+      return true;
     }
     function resetPagination(start){
       pageStarts=[Math.max(0,Math.min(bookText.length-1,Math.floor(start||0)))];
@@ -352,6 +413,7 @@
       pageText.textContent=pageContents[current]||'';
       const percentage=Math.round(100*(currentOffset()/Math.max(bookText.length,1)));
       $('progressInfo').textContent='Прочитано около '+percentage+'% · место сохранено';
+      updatePageLabel();
       savePlace();
     }
     function preparePrevious(){
@@ -414,22 +476,115 @@
     function normalizeText(text){
       return text.replace(/\u0000/g,'').replace(/\r\n?/g,'\n').replace(/[ \t]+\n/g,'\n').replace(/\n{4,}/g,'\n\n\n').trim();
     }
+    function showLoading(phase,title,message,percent=null){
+      loadPhase=phase;
+      $('loadingPanel').hidden=false;
+      $('loadTitle').textContent=title;
+      $('loadMessage').textContent=message;
+      $('uploadTrack').classList.toggle('indeterminate',percent===null);
+      if(percent===null){
+        $('uploadPercent').textContent=phase==='process'?'На сервере · время ожидания: 0:00':'Подготавливаем…';
+      }else{
+        const value=Math.min(100,Math.max(0,Math.round(percent)));
+        $('uploadFill').style.width=value+'%';
+        $('uploadPercent').textContent=value+'% загружено';
+      }
+    }
+    function progressPercent(percent){
+      if(loadPhase!=='upload')return;
+      const p=Math.min(100,Math.max(0,Math.round(percent)));
+      $('uploadFill').style.width=p+'%';
+      $('uploadPercent').textContent=p+'% загружено';
+    }
+    function beginLoad(){
+      loadStart=Date.now();
+      showLoading('prepare','Открываем книгу','Проверяем сохранённую копию…');
+      if(loadClock)clearInterval(loadClock);
+      loadClock=setInterval(()=>{
+        if(!loading||$('loadingPanel').hidden)return;
+        const seconds=Math.floor((Date.now()-loadStart)/1000);
+        const elapsed=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');
+        if(loadPhase==='process')$('uploadPercent').textContent='Обработка · '+elapsed;
+        if(loadPhase==='upload'&&seconds>12&&$('uploadPercent').textContent.includes('загружено')){
+          $('loadMessage').textContent='Передаём файл на сервер. Можно отменить загрузку.';
+        }
+      },1000);
+    }
+    function endLoad(){
+      if(loadClock){clearInterval(loadClock);loadClock=null;}
+      $('loadingPanel').hidden=true;
+      activeRequest=null;activeFileReader=null;
+    }
+    function cancelLoading(){
+      if(!loading)return;
+      loadToken++;
+      if(activeRequest){try{activeRequest.abort();}catch(e){}}
+      if(activeFileReader){try{activeFileReader.abort();}catch(e){}}
+      loading=false;
+      endLoad();
+      bookText='';bookName='';
+      reader.hidden=true;
+      $('landingScreen').hidden=false;
+      document.body.classList.remove('reading');
+      clearFullscreen();
+      $('openBook').disabled=!selectedFile;
+      $('feedback').textContent='Загрузка отменена.';
+    }
+    function readLocalFile(file){
+      return new Promise((resolve,reject)=>{
+        const fr=new FileReader();activeFileReader=fr;
+        showLoading('upload','Читаем файл','Загружаем текст с устройства…',0);
+        fr.onprogress=e=>{if(e.lengthComputable)progressPercent(100*e.loaded/e.total);};
+        fr.onerror=()=>reject(new Error('Не удалось прочитать файл на устройстве.'));
+        fr.onabort=()=>reject(new Error('Чтение файла отменено.'));
+        fr.onload=()=>{
+          activeFileReader=null;
+          try{
+            showLoading('prepare','Подготавливаем текст','Обрабатываем содержимое книги…');
+            const bytes=fr.result;
+            let text=new TextDecoder('utf-8').decode(bytes);
+            if((text.match(/\uFFFD/g)||[]).length>3)text=new TextDecoder('windows-1251').decode(bytes);
+            resolve(normalizeText(text));
+          }catch(err){reject(err);}
+        };
+        fr.readAsArrayBuffer(file);
+      });
+    }
+    function uploadAndConvert(file){
+      return new Promise((resolve,reject)=>{
+        const request=new XMLHttpRequest();
+        activeRequest=request;
+        request.open('POST','/api/book');
+        request.responseType='text';
+        request.timeout=900000;
+        showLoading('upload','Загружаем книгу','Передаём файл на сервер…',0);
+        request.upload.onprogress=e=>{
+          if(e.lengthComputable&&e.total>0)progressPercent(100*e.loaded/e.total);
+          else if(loadPhase==='upload')$('uploadPercent').textContent='Идёт загрузка…';
+        };
+        request.upload.onload=()=>{
+          showLoading('process','Извлекаем текст','Файл загружен на 100%. Сервер обрабатывает книгу. Для большого PDF или DOC это может занять несколько минут.');
+        };
+        request.onload=()=>{
+          activeRequest=null;
+          if(request.status>=200&&request.status<300){
+            resolve(normalizeText(request.responseText));
+          }else{
+            let message='Сервер не смог открыть книгу (HTTP '+request.status+').';
+            try{const reply=JSON.parse(request.responseText);if(reply.detail)message=reply.detail;}catch(e){}
+            reject(new Error(message));
+          }
+        };
+        request.onerror=()=>{activeRequest=null;reject(new Error('Ошибка соединения с сервером. Проверьте интернет и повторите попытку.'));};
+        request.onabort=()=>{activeRequest=null;reject(new Error('Загрузка остановлена.'));};
+        request.ontimeout=()=>{activeRequest=null;reject(new Error('Время обработки истекло. Попробуйте уменьшить файл или изменить его формат.'));};
+        const data=new FormData();data.append('file',file,file.name);
+        request.send(data);
+      });
+    }
     async function extract(file){
       const suffix=(file.name.split('.').pop()||'').toLowerCase();
-      if(['txt','text','md'].includes(suffix)){
-        const bytes=await file.arrayBuffer();
-        let text=new TextDecoder('utf-8').decode(bytes);
-        if((text.match(/\uFFFD/g)||[]).length>3)text=new TextDecoder('windows-1251').decode(bytes);
-        return normalizeText(text);
-      }
-      const data=new FormData();data.append('file',file,file.name);
-      const response=await fetch('/api/book',{method:'POST',body:data,cache:'no-store'});
-      if(!response.ok){
-        let message='Книгу не удалось открыть.';
-        try{const result=await response.json();message=result.detail||message;}catch(e){}
-        throw new Error(message);
-      }
-      return normalizeText(await response.text());
+      return ['txt','text','md'].includes(suffix)?readLocalFile(file):uploadAndConvert(file);
     }
     function doFullscreen(){
       try{
@@ -466,54 +621,71 @@
       bookName=id;bookText=text;
       if(!bookText)throw new Error('Текст книги не найден.');
       applyPrefs(false);
+      refreshPageEstimate();
       resetPagination(loadPlace(position));
       $('feedback').textContent='';
     }
     async function openBook(){
       if(!selectedFile||loading)return;
+      const token=++loadToken;
       loading=true;
       $('openBook').disabled=true;
-      $('feedback').textContent='Открываем книгу…';
+      $('feedback').textContent='';
       cacheWarning='';
       enterReader();
+      beginLoad();
       try{
         const file=selectedFile;
         const id=[file.name,file.size,file.lastModified].join(':');
         let content=null,metadata=null;
         try{
           [content,metadata]=await Promise.all([dbRead('contents',id),dbRead('books',id)]);
-        }catch(e){} // The reader still works when private browsing disables storage.
+        }catch(e){} // Storage may be unavailable in private browsing.
+        if(token!==loadToken)return;
         if(content&&typeof content.text==='string'&&content.text.length){
+          showLoading('prepare','Восстанавливаем книгу','Загружаем книгу из памяти устройства…');
           displayText(content.text,id,metadata?.position||0);
         }else{
           const text=await extract(file);
-          if(!text)throw new Error('Не найден текст. Возможно, это PDF со сканированными страницами.');
-          // Save extracted text, NOT the original upload. Opening it again skips server processing.
+          if(token!==loadToken)return;
+          if(!text)throw new Error('Текст не найден. Возможно, PDF содержит только фотографии страниц.');
           bookName=id;bookText=text;
-          pageText.textContent='Сохраняем книгу на устройстве…';
+          showLoading('save','Сохраняем книгу','Сохраняем готовый текст на этом устройстве. Повторная загрузка не понадобится.');
           try{await saveBook(id,file,text);}
           catch(e){cacheWarning='Книга открыта, но браузер не смог сохранить её для повторного чтения (возможно, недостаточно места).';}
+          if(token!==loadToken)return;
           displayText(text,id,0);
         }
-      }catch(e){openingFailed(e);}
-      finally{
-        loading=false;
-        $('openBook').disabled=false;
-        refreshLibrary();
+      }catch(e){
+        if(token===loadToken)openingFailed(e);
+      }finally{
+        if(token===loadToken){
+          loading=false;
+          endLoad();
+          $('openBook').disabled=false;
+          refreshLibrary();
+        }
       }
     }
     async function openSavedBook(id){
       if(loading)return;
+      const token=++loadToken;
       loading=true;
       cacheWarning='';
       $('feedback').textContent='';
       enterReader();
+      beginLoad();
       try{
+        showLoading('prepare','Открываем сохранённую книгу','Загружаем содержимое с этого устройства…');
         const [content,meta]=await Promise.all([dbRead('contents',id),dbRead('books',id)]);
+        if(token!==loadToken)return;
         if(!content||!content.text)throw new Error('Сохранённая книга не найдена. Загрузите её заново.');
         displayText(content.text,id,meta?.position||0);
-      }catch(e){openingFailed(e);}
-      finally{loading=false;refreshLibrary();}
+      }catch(e){
+        if(token===loadToken)openingFailed(e);
+      }finally{
+        if(token===loadToken){loading=false;endLoad();refreshLibrary();}
+      }
     }
     function closeBook(){
       if(loading)return;
@@ -539,6 +711,7 @@
     ['dragleave','drop'].forEach(t=>$('drop').addEventListener(t,e=>{e.preventDefault();$('drop').classList.remove('over');}));
     $('drop').addEventListener('drop',e=>selectFile(e.dataTransfer.files[0]));
     $('openBook').addEventListener('click',openBook);
+    $('cancelLoad').addEventListener('click',cancelLoading);
     $('libraryItems').addEventListener('click',async e=>{
       const del=e.target.closest('[data-delete-book]');
       if(del){
@@ -555,6 +728,11 @@
     document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&bookText)savePlace();});
     $('settingsHotspot').addEventListener('click',e=>{e.stopPropagation();showSettings();});
     $('closeSettings').addEventListener('click',e=>{e.stopPropagation();settings.hidden=true;});
+    $('jumpForm').addEventListener('submit',e=>{
+      e.preventDefault();
+      if(jumpToPage(Number($('jumpPage').value)))settings.hidden=true;
+      else $('pageHint').textContent='Укажите страницу от 1 до '+totalPages()+'.';
+    });
     $('exitBook').addEventListener('click',closeBook);
     $('themes').addEventListener('click',e=>{
       const btn=e.target.closest('[data-theme]');
@@ -599,7 +777,7 @@
     window.addEventListener('resize',()=>{
       if(reader.hidden||!bookText||loading)return;
       clearTimeout(resizeTimer);
-      resizeTimer=setTimeout(()=>resetPagination(currentOffset()),180);
+      resizeTimer=setTimeout(()=>{const offset=currentOffset();refreshPageEstimate();resetPagination(offset);},180);
     });
     applyPrefs(false);
     refreshLibrary();

@@ -483,6 +483,7 @@
       $('loadMessage').textContent=message;
       $('uploadTrack').classList.toggle('indeterminate',percent===null);
       if(percent===null){
+        $('uploadFill').style.width='';
         $('uploadPercent').textContent=phase==='process'?'На сервере · время ожидания: 0:00':'Подготавливаем…';
       }else{
         const value=Math.min(100,Math.max(0,Math.round(percent)));

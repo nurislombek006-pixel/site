@@ -182,4 +182,38 @@ async def convert(file: UploadFile=File(...), target: str=Form(...)):
         shutil.rmtree(workdir,ignore_errors=True)
         raise
 
+
+# Book reader uses an isolated temporary workspace; uploaded books are not stored.
+from fastapi.responses import PlainTextResponse
+import subprocess
+import zipfile
+from xml.etree import ElementTree as ET
+from book_reader import SUPPORTED_BOOKS, extract_book
+
+@app.post("/api/book", response_class=PlainTextResponse)
+async def open_book(file: UploadFile = File(...)):
+    name = Path(file.filename or "book.txt").name
+    suffix = name.rsplit(".", 1)[-1].lower()
+    if suffix not in SUPPORTED_BOOKS:
+        raise HTTPException(415, "Этот формат книги пока не поддерживается.")
+    with tempfile.TemporaryDirectory(prefix="flux-book-") as workspace:
+        source = Path(workspace) / ("book." + suffix)
+        total = 0
+        try:
+            with source.open("wb") as dst:
+                while chunk := await file.read(1048576):
+                    total += len(chunk)
+                    if total > MAX_UPLOAD:
+                        raise HTTPException(413, "Размер книги превышает лимит загрузки.")
+                    dst.write(chunk)
+            await file.close()
+            if total == 0:
+                raise HTTPException(400, "Файл пустой.")
+            text = await run_in_threadpool(extract_book, source, suffix, workspace)
+            return PlainTextResponse(text, headers={"Cache-Control": "no-store"})
+        except HTTPException:
+            raise
+        except (ValueError, zipfile.BadZipFile, ET.ParseError, subprocess.TimeoutExpired, KeyError, RuntimeError) as exc:
+            raise HTTPException(422, str(exc) if isinstance(exc, ValueError) else "Не удалось открыть книгу.") from exc
+
 app.mount("/", StaticFiles(directory=HERE/"static",html=True),name="site")

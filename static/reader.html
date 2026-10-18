@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0c1220">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Читать книгу — FluxConvert</title>
+  <link rel="manifest" href="/reader.webmanifest">
+  <style>
+    :root{color-scheme:dark;--bg:#0c1220;--panel:#161f30;--stroke:#344158;--ink:#f7f8fc;--muted:#aab3c5;--accent:#9384ff}
+    *{box-sizing:border-box}
+    [hidden]{display:none!important}
+    html,body{margin:0;min-height:100%;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+    body{background:var(--bg);color:var(--ink)}
+    body.reading{overflow:hidden}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #9785fc;outline-offset:3px}
+    a{color:inherit;text-decoration:none}
+    .top{max-width:1000px;margin:auto;padding:26px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{font-weight:800;letter-spacing:-.5px;font-size:18px}
+    .brand span{color:#aca2ff}
+    .back{color:#b4bcd0;font-size:13px}
+    .landing{min-height:calc(100dvh - 100px);display:flex;align-items:center;justify-content:center;padding:20px 18px 90px}
+    .start{width:min(100%,510px);text-align:center}
+    h1{font-size:clamp(32px,6vw,43px);letter-spacing:-1.4px;line-height:1.14;margin:0 0 11px}
+    .subtitle{font-size:14px;line-height:1.6;color:var(--muted);margin:0 0 28px}
+    .import-box{background:var(--panel);border:1px solid var(--stroke);border-radius:19px;padding:24px}
+    .pick{display:flex;min-height:183px;align-items:center;justify-content:center;border:1.5px dashed #66728d;border-radius:14px;cursor:pointer;padding:22px;transition:.2s}
+    .pick:hover,.pick.over{border-color:#b3a7ff;background:#837aff16}
+    .pick-icon{display:flex;align-items:center;justify-content:center;width:50px;height:50px;border-radius:15px;margin:0 auto 12px;background:#897aff22;color:#d1c8ff}
+    .pick-icon svg{width:26px;height:26px}
+    .pick-title{display:block;font-size:16px;font-weight:750;overflow-wrap:anywhere}
+    .pick-help{display:block;color:var(--muted);font-size:12px;margin-top:7px}
+    #fileInput{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+    .open{margin-top:20px;background:#9280ff;border:0;color:#fff;border-radius:11px;width:100%;min-height:51px;font-weight:770}
+    .open:disabled{opacity:.45;cursor:not-allowed}
+    .formats{margin-top:14px;font-size:12px;color:#8291a8;line-height:1.6}
+    .feedback{min-height:22px;font-size:13px;margin:14px 0 0;color:#ffbbbb;overflow-wrap:anywhere}
+    /* No visible controls at all in the immersive reading view. */
+    .reader{--pageBg:#f5e7c6;--surround:#d9ccaa;--pageInk:#302a21;--fontSize:21px;--lineHeight:1.7;--fontFamily:Georgia,"Times New Roman",serif;--letterSpacing:0px;position:fixed;inset:0;z-index:30;background:var(--surround);color:var(--pageInk);overflow:hidden;overscroll-behavior:none;touch-action:pan-y}
+    .bookstage{height:100%;width:100%;display:flex;justify-content:center;align-items:center;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));perspective:1850px}
+    .paper{width:min(100%,760px);height:min(94%,1000px);background:var(--pageBg);color:var(--pageInk);border-radius:5px;position:relative;display:flex;padding:clamp(22px,4vw,48px);box-shadow:0 12px 35px #0002,inset 9px 0 15px -13px #0007;transition:background .2s;transform-style:preserve-3d}
+    .page-text{min-height:0;min-width:0;flex:1;white-space:pre-wrap;overflow:hidden;overflow-wrap:anywhere;word-break:normal;font-size:var(--fontSize);line-height:var(--lineHeight);font-family:var(--fontFamily);letter-spacing:var(--letterSpacing);font-weight:400;text-align:left}
+    .measure-text{position:fixed;left:-20000px;top:0;height:auto!important;max-height:none!important;flex:none;overflow:visible;visibility:hidden;pointer-events:none}
+    .flip-sheet{position:absolute;inset:0;z-index:3;background:var(--pageBg);color:var(--pageInk);padding:clamp(22px,4vw,48px);display:flex;border-radius:5px;box-shadow:0 6px 20px #0004;backface-visibility:hidden;pointer-events:none;will-change:transform}
+    .flip-sheet.forward{transform-origin:left center;animation:turnForward .55s ease-in forwards}
+    .flip-sheet.backward{transform-origin:right center;animation:turnBackward .55s ease-in forwards}
+    @keyframes turnForward{0%{transform:rotateY(0);box-shadow:0 6px 20px #0002}85%{box-shadow:20px 14px 36px #0004}100%{transform:rotateY(-125deg);opacity:.4}}
+    @keyframes turnBackward{0%{transform:rotateY(0);box-shadow:0 6px 20px #0002}85%{box-shadow:-20px 14px 36px #0004}100%{transform:rotateY(125deg);opacity:.4}}
+    .corner-hotspot{position:fixed;z-index:40;top:0;right:0;width:max(58px,calc(42px + env(safe-area-inset-right)));height:max(65px,calc(48px + env(safe-area-inset-top)));opacity:0;border:0;background:transparent;color:transparent;padding:0}
+    .settings{position:fixed;z-index:60;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));width:min(340px,calc(100% - 24px));max-height:calc(100dvh - 26px);overflow:auto;overscroll-behavior:contain;background:#1a2231;color:#f4f5fb;box-shadow:0 16px 60px #0007;border-radius:17px;border:1px solid #48506a;padding:18px;text-align:left}
+    .setting-title{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:17px;font-weight:800;margin-bottom:19px}
+    .close-settings{border:0;background:#313c50;border-radius:8px;width:34px;height:34px;color:white;font-size:18px}
+    .setting-label{display:block;font-size:13px;font-weight:730;margin:19px 0 9px}
+    .themes{display:flex;flex-wrap:wrap;gap:10px}
+    .theme{display:inline-block;width:38px;height:38px;border-radius:50%;border:2px solid #687289;background:var(--swatch);padding:0}
+    .theme.selected{outline:2px solid #b4aaff;outline-offset:3px}
+    .setting-row{display:flex;align-items:center;justify-content:space-between;gap:14px;font-size:12px;color:#b9c3d7;margin-top:7px}
+    input[type=range]{display:block;width:100%;accent-color:#9d90ff}
+    .font-select{display:block;width:100%;border:1px solid #526079;border-radius:8px;background:#101827;color:#f4f5fb;padding:10px;margin-top:6px}
+    .exit-button{width:100%;margin-top:25px;background:#303c51;color:#fff;border:1px solid #5e6b81;border-radius:10px;padding:13px;font-weight:750}
+    .tip{margin:12px 0 0;color:#98a6bb;font-size:11px;line-height:1.5}
+    .dim{position:fixed;inset:0;z-index:100;background:black;opacity:0;pointer-events:none}
+    @media(max-width:640px){.top{padding:18px}.landing{padding:26px 16px 70px;align-items:flex-start;padding-top:clamp(80px,15vh,140px)}.import-box{padding:15px}.paper{height:100%;width:100%;border-radius:0;box-shadow:none;padding:clamp(20px,5vw,35px)}.bookstage{padding:0}.flip-sheet{padding:clamp(20px,5vw,35px)}.reader{--fontSize:19px}}
+    @media(prefers-reduced-motion:reduce){.flip-sheet.forward,.flip-sheet.backward{animation-duration:.01ms}*{transition-duration:.01ms!important}}
+  </style>
+</head>
+<body>
+  <div id="landingScreen">
+    <header class="top">
+      <a class="brand" href="/">Flux<span>Convert</span></a>
+      <a class="back" href="/">← Конвертер</a>
+    </header>
+    <main class="landing">
+      <div class="start">
+        <h1>Читать книгу</h1>
+        <p class="subtitle">Загрузите книгу и читайте, как на настоящих страницах.</p>
+        <div class="import-box">
+          <div id="drop" class="pick" role="button" tabindex="0" aria-label="Выбрать книгу">
+            <input id="fileInput" type="file" accept=".txt,.text,.md,.pdf,.doc,.docx,.odt,.rtf,.epub,.fb2,.html,.htm">
+            <div>
+              <span class="pick-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5C7 4.2 9 4.6 12 6c3-1.4 5-1.8 8-.5v13c-3-1.2-5-.9-8 .5-3-1.4-5-1.7-8-.5zM12 6v13"/></svg>
+              </span>
+              <strong class="pick-title" id="fileName">Выбрать книгу</strong>
+              <span class="pick-help" id="fileDetails">или перетащите файл сюда</span>
+            </div>
+          </div>
+          <button type="button" id="openBook" class="open" disabled>Открыть книгу</button>
+          <div class="formats">DOC, DOCX, TXT, PDF, EPUB, FB2, RTF, ODT, HTML, MD · до 80 МБ</div>
+          <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <div class="reader" id="reader" hidden aria-label="Режим чтения">
+    <div class="bookstage">
+      <div id="paper" class="paper"><div id="pageText" class="page-text"></div></div>
+    </div>
+    <div id="measure" class="page-text measure-text" aria-hidden="true"></div>
+    <button type="button" class="corner-hotspot" id="settingsHotspot" aria-label="Настройки чтения" title="Настройки чтения"></button>
+    <aside id="settings" class="settings" hidden aria-label="Настройки чтения">
+      <div class="setting-title">Настройки <button id="closeSettings" type="button" class="close-settings" aria-label="Закрыть настройки">×</button></div>
+      <label class="setting-label">Цвет страниц</label>
+      <div class="themes" id="themes">
+        <button type="button" class="theme" data-theme="cream" style="--swatch:#f5e7c6" aria-label="Кремовый" title="Кремовый"></button>
+        <button type="button" class="theme" data-theme="yellow" style="--swatch:#efdc9f" aria-label="Тёплый жёлтый" title="Тёплый жёлтый"></button>
+        <button type="button" class="theme" data-theme="white" style="--swatch:#fff" aria-label="Белый" title="Белый"></button>
+        <button type="button" class="theme" data-theme="black" style="--swatch:#111" aria-label="Чёрный" title="Чёрный"></button>
+        <button type="button" class="theme" data-theme="blue" style="--swatch:#263246" aria-label="Тёмно-синий" title="Тёмно-синий"></button>
+        <button type="button" class="theme" data-theme="sage" style="--swatch:#dbe6d2" aria-label="Зеленоватый" title="Зеленоватый"></button>
+      </div>
+      <label class="setting-label" for="fontFamily">Шрифт</label>
+      <select id="fontFamily" class="font-select">
+        <option value="book">Книжный — Georgia</option>
+        <option value="classic">Классический — Times</option>
+        <option value="sans">Без засечек</option>
+      </select>
+      <label class="setting-label" for="fontSize">Размер текста</label>
+      <input id="fontSize" type="range" min="14" max="35" step="1" value="21">
+      <div class="setting-row"><span>Меньше</span><output id="fontSizeOutput">21</output><span>Больше</span></div>
+      <label class="setting-label" for="lineHeight">Межстрочный интервал</label>
+      <input id="lineHeight" type="range" min="1.25" max="2.15" step=".05" value="1.7">
+      <label class="setting-label" for="letterSpacing">Расстояние между буквами</label>
+      <input id="letterSpacing" type="range" min="0" max="2" step=".25" value="0">
+      <label class="setting-label" for="darkness">Затемнение экрана</label>
+      <input id="darkness" type="range" min="0" max="70" step="1" value="0">
+      <div class="setting-row"><span>Обычный</span><span>Темнее</span></div>
+      <div class="setting-row"><span id="progressInfo">Место чтения сохранено</span></div>
+      <button id="exitBook" type="button" class="exit-button">Закрыть книгу</button>
+      <p class="tip">Листайте свайпом или нажатием по краям страницы. Настройки — в правом верхнем углу. На iPhone для чтения без панели Safari добавьте сайт на экран «Домой».</p>
+    </aside>
+    <div id="dim" class="dim" aria-hidden="true"></div>
+  </div>
+  <script>
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const reader=$('reader'),paper=$('paper'),pageText=$('pageText'),measure=$('measure'),settings=$('settings');
+    const allowed=new Set(['txt','text','md','pdf','doc','docx','odt','rtf','epub','fb2','html','htm']);
+    const colors={
+      cream:['#f5e7c6','#d9ccaa','#302a21'],
+      yellow:['#efdc9f','#dac487','#332816'],
+      white:['#fff','#e7e8eb','#20232a'],
+      black:['#111318','#08090c','#f0f0eb'],
+      blue:['#263246','#151e2d','#e5e9f0'],
+      sage:['#dbe6d2','#bbcdb8','#263c30']
+    };
+    const fonts={book:'Georgia,"Times New Roman",serif',classic:'"Times New Roman",Georgia,serif',sans:'-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif'};
+    const defaults={theme:'cream',fontFamily:'book',fontSize:21,lineHeight:1.7,letterSpacing:0,darkness:0};
+    let prefs={...defaults},selectedFile=null,bookText='',bookName='',pageStarts=[0],pageContents=[],current=0,working=false,turning=false,swipeStart=null,suppressClickUntil=0,resizeTimer=null,loading=false;
+    try{const saved=JSON.parse(localStorage.getItem('flux-reader-settings')||'null');if(saved&&typeof saved==='object')prefs={...defaults,...saved};}catch(e){}
+    function savePrefs(){try{localStorage.setItem('flux-reader-settings',JSON.stringify(prefs));}catch(e){}}
+    function currentOffset(){return pageStarts[current]||0;}
+    function bookmarkKey(){return 'flux-reader-place:'+bookName;}
+    function savePlace(){if(!bookText)return;try{localStorage.setItem(bookmarkKey(),String(currentOffset()));}catch(e){}}
+    function loadPlace(){try{const n=Number(localStorage.getItem(bookmarkKey())||0);return Number.isFinite(n)?Math.max(0,Math.min(bookText.length-1,n)):0;}catch(e){return 0;}}
+    function applyPrefs(preserve=true){
+      const position=preserve&&bookText?currentOffset():0;
+      const [bg,surround,color]=colors[prefs.theme]||colors.cream;
+      reader.style.setProperty('--pageBg',bg);
+      reader.style.setProperty('--surround',surround);
+      reader.style.setProperty('--pageInk',color);
+      reader.style.setProperty('--fontFamily',fonts[prefs.fontFamily]||fonts.book);
+      reader.style.setProperty('--fontSize',Math.max(14,Math.min(35,Number(prefs.fontSize)||21))+'px');
+      reader.style.setProperty('--lineHeight',String(Math.max(1.25,Math.min(2.15,Number(prefs.lineHeight)||1.7))));
+      reader.style.setProperty('--letterSpacing',Math.max(0,Math.min(2,Number(prefs.letterSpacing)||0))+'px');
+      $('dim').style.opacity=String(Math.max(0,Math.min(.7,(Number(prefs.darkness)||0)/100)));
+      $('fontFamily').value=prefs.fontFamily in fonts?prefs.fontFamily:'book';
+      ['fontSize','lineHeight','letterSpacing','darkness'].forEach(key=>$(key).value=String(prefs[key]));
+      $('fontSizeOutput').textContent=String(prefs.fontSize);
+      document.querySelectorAll('[data-theme]').forEach(b=>b.classList.toggle('selected',b.dataset.theme===prefs.theme));
+      if(bookText&&preserve)resetPagination(position);
+      savePrefs();
+    }
+    function resetPagination(start){
+      pageStarts=[Math.max(0,Math.min(bookText.length-1,Math.floor(start||0)))];
+      pageContents=[];current=0;renderPage();
+    }
+    function fits(start,count){
+      measure.style.width=pageText.clientWidth+'px';
+      measure.textContent=bookText.slice(start,start+count);
+      return measure.scrollHeight<=pageText.clientHeight+1;
+    }
+    function trimEdge(start,len){
+      if(start+len>=bookText.length)return len;
+      const text=bookText.slice(start,start+len);
+      const space=Math.max(text.lastIndexOf(' '),text.lastIndexOf('\n'),text.lastIndexOf('\t'));
+      return space>Math.floor(len*.78)?space+1:len;
+    }
+    function buildPage(index){
+      if(pageContents[index]!==undefined)return;
+      const start=pageStarts[index];
+      if(start===undefined||start>=bookText.length){pageContents[index]='';return;}
+      let low=1,high=Math.min(12000,bookText.length-start);
+      while(low<high){
+        const mid=Math.ceil((low+high)/2);
+        if(fits(start,mid))low=mid;else high=mid-1;
+      }
+      const length=trimEdge(start,low);
+      pageContents[index]=bookText.slice(start,start+length);
+      pageStarts[index+1]=start+length;
+    }
+    function renderPage(){
+      if(!bookText)return;
+      buildPage(current);
+      pageText.textContent=pageContents[current]||'';
+      const percentage=Math.round(100*(currentOffset()/Math.max(bookText.length,1)));
+      $('progressInfo').textContent='Прочитано около '+percentage+'% · место сохранено';
+      savePlace();
+    }
+    function preparePrevious(){
+      const end=pageStarts[0];
+      if(!end)return false;
+      measure.style.width=pageText.clientWidth+'px';
+      let low=1,high=Math.min(12000,end);
+      while(low<high){
+        const mid=Math.ceil((low+high)/2);
+        measure.textContent=bookText.slice(end-mid,end);
+        if(measure.scrollHeight<=pageText.clientHeight+1)low=mid;else high=mid-1;
+      }
+      let start=end-low;
+      if(start>0){
+        const snippet=bookText.slice(start,Math.min(end,start+110));
+        const whitespace=snippet.search(/\s/);
+        if(whitespace>=0 && whitespace<60)start+=whitespace+1;
+      }
+      pageStarts.unshift(start);
+      pageContents.unshift(bookText.slice(start,end));
+      current++;
+      return true;
+    }
+    function turn(direction){
+      if(!bookText||turning||!settings.hidden)return;
+      buildPage(current);
+      if(direction===1){
+        if(pageStarts[current+1]>=bookText.length)return;
+        buildPage(current+1);
+      }else if(current===0&&!preparePrevious())return;
+      const oldText=pageText.textContent;
+      current+=direction;
+      renderPage();
+      if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+      turning=true;
+      const sheet=document.createElement('div');
+      sheet.className='flip-sheet '+(direction>0?'forward':'backward');
+      const printed=document.createElement('div');
+      printed.className='page-text';
+      printed.textContent=oldText;
+      sheet.appendChild(printed);
+      paper.appendChild(sheet);
+      sheet.addEventListener('animationend',()=>{sheet.remove();turning=false;},{once:true});
+      setTimeout(()=>{if(sheet.isConnected){sheet.remove();turning=false;}},700);
+    }
+    function selectFile(file){
+      if(!file)return;
+      selectedFile=null;
+      $('openBook').disabled=true;
+      const ext=(file.name.split('.').pop()||'').toLowerCase();
+      $('feedback').textContent='';
+      if(!allowed.has(ext)){$('feedback').textContent='Этот формат книги не поддерживается.';return;}
+      if(file.size>80*1024*1024){$('feedback').textContent='Размер файла не должен превышать 80 МБ.';return;}
+      if(!file.size){$('feedback').textContent='Файл пустой.';return;}
+      selectedFile=file;
+      $('fileName').textContent=file.name;
+      $('fileDetails').textContent=(file.size/1048576).toFixed(2)+' МБ · Нажмите, чтобы заменить';
+      $('openBook').disabled=false;
+    }
+    function normalizeText(text){
+      return text.replace(/\u0000/g,'').replace(/\r\n?/g,'\n').replace(/[ \t]+\n/g,'\n').replace(/\n{4,}/g,'\n\n\n').trim();
+    }
+    async function extract(file){
+      const suffix=(file.name.split('.').pop()||'').toLowerCase();
+      if(['txt','text','md'].includes(suffix)){
+        const bytes=await file.arrayBuffer();
+        let text=new TextDecoder('utf-8').decode(bytes);
+        if((text.match(/\uFFFD/g)||[]).length>3)text=new TextDecoder('windows-1251').decode(bytes);
+        return normalizeText(text);
+      }
+      const data=new FormData();data.append('file',file,file.name);
+      const response=await fetch('/api/book',{method:'POST',body:data,cache:'no-store'});
+      if(!response.ok){
+        let message='Книгу не удалось открыть.';
+        try{const result=await response.json();message=result.detail||message;}catch(e){}
+        throw new Error(message);
+      }
+      return normalizeText(await response.text());
+    }
+    function doFullscreen(){
+      try{
+        const fn=reader.requestFullscreen||reader.webkitRequestFullscreen;
+        if(fn){const p=fn.call(reader);if(p&&typeof p.catch==='function')p.catch(()=>{});}
+      }catch(e){}
+    }
+    function clearFullscreen(){
+      try{
+        const fn=document.exitFullscreen||document.webkitExitFullscreen;
+        if(fn&&(document.fullscreenElement||document.webkitFullscreenElement)){
+          const p=fn.call(document);if(p&&typeof p.catch==='function')p.catch(()=>{});
+        }
+      }catch(e){}
+    }
+    async function openBook(){
+      if(!selectedFile||loading)return;
+      loading=true;
+      $('openBook').disabled=true;
+      $('feedback').textContent='Открываем книгу…';
+      reader.hidden=false;
+      $('landingScreen').hidden=true;
+      document.body.classList.add('reading');
+      pageText.textContent='Открываем книгу…';
+      settings.hidden=true;
+      doFullscreen();
+      try{
+        const file=selectedFile;
+        bookText=await extract(file);
+        if(!bookText)throw new Error('Не найден текст. Возможно, это PDF со сканированными страницами.');
+        bookName=[file.name,file.size,file.lastModified].join(':');
+        applyPrefs(false);
+        resetPagination(loadPlace());
+        $('feedback').textContent='';
+      }catch(e){
+        reader.hidden=true;
+        $('landingScreen').hidden=false;
+        document.body.classList.remove('reading');
+        clearFullscreen();
+        $('feedback').textContent=e.message||'Не удалось открыть книгу.';
+        bookText='';
+      }finally{
+        loading=false;
+        $('openBook').disabled=false;
+      }
+    }
+    function closeBook(){
+      if(loading)return;
+      savePlace();
+      settings.hidden=true;
+      reader.hidden=true;
+      $('landingScreen').hidden=false;
+      document.body.classList.remove('reading');
+      clearFullscreen();
+      bookText='';
+      pageContents=[];pageStarts=[0];
+    }
+    function showSettings(){settings.hidden=!settings.hidden;}
+    $('drop').addEventListener('click',e=>{if(e.target!==$('fileInput')){$('fileInput').value='';$('fileInput').click();}});
+    $('drop').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('fileInput').value='';$('fileInput').click();}});
+    $('fileInput').addEventListener('change',()=>selectFile($('fileInput').files[0]));
+    ['dragenter','dragover'].forEach(t=>$('drop').addEventListener(t,e=>{e.preventDefault();$('drop').classList.add('over');}));
+    ['dragleave','drop'].forEach(t=>$('drop').addEventListener(t,e=>{e.preventDefault();$('drop').classList.remove('over');}));
+    $('drop').addEventListener('drop',e=>selectFile(e.dataTransfer.files[0]));
+    $('openBook').addEventListener('click',openBook);
+    $('settingsHotspot').addEventListener('click',e=>{e.stopPropagation();showSettings();});
+    $('closeSettings').addEventListener('click',e=>{e.stopPropagation();settings.hidden=true;});
+    $('exitBook').addEventListener('click',closeBook);
+    $('themes').addEventListener('click',e=>{
+      const btn=e.target.closest('[data-theme]');
+      if(btn&&colors[btn.dataset.theme]){prefs.theme=btn.dataset.theme;applyPrefs();}
+    });
+    ['fontFamily','fontSize','lineHeight','letterSpacing','darkness'].forEach(key=>{
+      $(key).addEventListener(key==='fontFamily'?'change':'input',()=>{
+        prefs[key]=key==='fontFamily'?$(key).value:Number($(key).value);
+        if(key==='darkness'){
+          $('dim').style.opacity=String(prefs.darkness/100);
+          savePrefs();
+        }else{
+          applyPrefs();
+        }
+      });
+    });
+    reader.addEventListener('touchstart',e=>{
+      if(!settings.hidden)return;
+      const t=e.changedTouches[0];swipeStart={x:t.clientX,y:t.clientY};
+    },{passive:true});
+    reader.addEventListener('touchend',e=>{
+      if(!swipeStart||!settings.hidden)return;
+      const t=e.changedTouches[0],dx=t.clientX-swipeStart.x,dy=t.clientY-swipeStart.y;
+      swipeStart=null;
+      if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.3){suppressClickUntil=Date.now()+500;turn(dx<0?1:-1);}
+    },{passive:true});
+    reader.addEventListener('click',e=>{
+      if(Date.now()<suppressClickUntil||!settings.hidden||e.target.closest('button,input,select,.settings')||!bookText)return;
+      const x=e.clientX/window.innerWidth;
+      if(x<.3)turn(-1);
+      else if(x>.7)turn(1);
+    });
+    document.addEventListener('keydown',e=>{
+      if(reader.hidden)return;
+      if(e.key==='Escape'){
+        if(!settings.hidden)settings.hidden=true;else closeBook();return;
+      }
+      if(!settings.hidden)return;
+      if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){e.preventDefault();turn(1);}
+      if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();turn(-1);}
+    });
+    window.addEventListener('resize',()=>{
+      if(reader.hidden||!bookText||loading)return;
+      clearTimeout(resizeTimer);
+      resizeTimer=setTimeout(()=>resetPagination(currentOffset()),180);
+    });
+    applyPrefs(false);
+  </script>
+</body>
+</html>

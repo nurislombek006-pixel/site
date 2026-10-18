@@ -1,0 +1,10 @@
+{
+  "name": "FluxConvert · Читать книги",
+  "short_name": "FluxReader",
+  "start_url": "/reader.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5e7c6",
+  "theme_color": "#0c1220",
+  "lang": "ru"
+}

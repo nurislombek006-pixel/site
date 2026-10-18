@@ -8,6 +8,7 @@ WORKDIR /srv/app
 COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/app.py ./app.py
+COPY backend/book_reader.py ./book_reader.py
 COPY static ./static
 RUN useradd --uid 10001 --no-create-home --shell /usr/sbin/nologin convertuser
 USER convertuser
